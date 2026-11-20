@@ -1,0 +1,3847 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>OpenCode Usage</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M9 21V11l7 5 7-5v10' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07090e;
+        --panel: #10131b;
+        --panel-2: #151926;
+        --line: #202634;
+        --line-2: #2b3245;
+        --text: #e9edf7;
+        --muted: #98a2b8;
+        --faint: #6b7488;
+        --accent: #8b5cf6;
+        --accent-2: #22d3ee;
+        --good: #34d399;
+        --warn: #fbbf24;
+        --bad: #fb7185;
+        --radius: 16px;
+        --shadow: 0 20px 50px -30px rgba(0, 0, 0, 0.9);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background:
+          radial-gradient(1000px 520px at 12% -12%, rgba(139, 92, 246, 0.16), transparent 62%),
+          radial-gradient(900px 480px at 92% -4%, rgba(34, 211, 238, 0.09), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          "Inter var", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .app {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 26px 22px 46px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .faint {
+        color: var(--faint);
+      }
+
+      /* ---------------- Top bar ---------------- */
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin: -12px 0 18px;
+        padding: 12px 0 14px;
+        background: linear-gradient(
+          180deg,
+          rgba(7, 9, 14, 0.94) 0%,
+          rgba(7, 9, 14, 0.82) 72%,
+          rgba(7, 9, 14, 0) 100%
+        );
+        backdrop-filter: blur(12px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(150deg, #8b5cf6, #6d3ef0 55%, #22d3ee);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.8);
+        flex: 0 0 auto;
+      }
+
+      .mark svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 680;
+        letter-spacing: -0.02em;
+      }
+
+      .brand p {
+        margin: 1px 0 0;
+        color: var(--faint);
+        font-size: 12.5px;
+      }
+
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line-2);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 550;
+        white-space: nowrap;
+      }
+
+      .pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--faint);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+      }
+
+      .pill.good .dot {
+        background: var(--good);
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.16);
+      }
+
+      .pill.warn .dot {
+        background: var(--warn);
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.16);
+      }
+
+      .pill.bad .dot {
+        background: var(--bad);
+        box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.18);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          opacity: 0.45;
+        }
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--line-2);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 8px 13px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 550;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.1s ease;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #3a4260;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn.busy {
+        opacity: 0.55;
+        pointer-events: none;
+      }
+
+      .btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ---------------- Banners ---------------- */
+
+      .banner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid rgba(251, 113, 133, 0.36);
+        background:
+          linear-gradient(90deg, rgba(251, 113, 133, 0.16), rgba(251, 113, 133, 0.03)),
+          var(--panel);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .banner.warn {
+        border-color: rgba(251, 191, 36, 0.34);
+        background:
+          linear-gradient(90deg, rgba(251, 191, 36, 0.13), rgba(251, 191, 36, 0.03)),
+          var(--panel);
+      }
+
+      .banner-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: rgba(251, 113, 133, 0.18);
+        color: var(--bad);
+        font-weight: 800;
+        font-size: 16px;
+        flex: 0 0 auto;
+      }
+
+      .banner.warn .banner-icon {
+        background: rgba(251, 191, 36, 0.16);
+        color: var(--warn);
+      }
+
+      .banner-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1 1 320px;
+        min-width: 0;
+      }
+
+      .banner-body strong {
+        font-size: 14px;
+        font-weight: 640;
+      }
+
+      .banner-body span {
+        color: var(--muted);
+        font-size: 12.8px;
+      }
+
+      .banner-timer {
+        font-variant-numeric: tabular-nums;
+        font-weight: 620;
+        font-size: 13px;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 9px;
+        padding: 7px 11px;
+        white-space: nowrap;
+      }
+
+      .notice {
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        background: rgba(251, 191, 36, 0.07);
+        color: #f6d68a;
+        border-radius: 12px;
+        padding: 11px 15px;
+        margin-bottom: 16px;
+        font-size: 12.8px;
+      }
+
+      .error-panel {
+        border: 1px solid rgba(251, 113, 133, 0.4);
+        background: rgba(251, 113, 133, 0.08);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+
+      .error-panel h3 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .error-panel p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+
+      /* ---------------- Layout ---------------- */
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .span-3 {
+        grid-column: span 3;
+      }
+
+      .span-4 {
+        grid-column: span 4;
+      }
+
+      .span-5 {
+        grid-column: span 5;
+      }
+
+      .span-7 {
+        grid-column: span 7;
+      }
+
+      .span-8 {
+        grid-column: span 8;
+      }
+
+      .span-12 {
+        grid-column: span 12;
+      }
+
+      .card {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005)),
+          var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px;
+        box-shadow: var(--shadow);
+        min-width: 0;
+        transition:
+          border-color 0.18s ease,
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      @media (hover: hover) {
+        .card:hover {
+          border-color: var(--line-2);
+          transform: translateY(-1px);
+          box-shadow: 0 28px 60px -34px rgba(0, 0, 0, 0.95);
+        }
+      }
+
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+
+      .card-head h2 {
+        margin: 0;
+        font-size: 14.5px;
+        font-weight: 620;
+        letter-spacing: -0.01em;
+      }
+
+      .card-head p {
+        margin: 3px 0 0;
+        color: var(--faint);
+        font-size: 12.2px;
+      }
+
+      /* ---------------- Stats ---------------- */
+
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat::after {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto auto;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.12), transparent 68%);
+        pointer-events: none;
+      }
+
+      .stat-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .stat-value {
+        font-size: 29px;
+        font-weight: 660;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stat-value .unit {
+        font-size: 14px;
+        color: var(--faint);
+        font-weight: 500;
+        letter-spacing: 0;
+        margin-left: 3px;
+      }
+
+      .stat-sub {
+        color: var(--muted);
+        font-size: 12px;
+        min-height: 18px;
+      }
+
+      .stat-foot {
+        color: var(--faint);
+        font-size: 11.5px;
+        margin-top: auto;
+      }
+
+      .meter {
+        height: 6px;
+        border-radius: 999px;
+        background: #1b2130;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .meter-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #6d3ef0, #8b5cf6 55%, #22d3ee);
+        transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .meter-fill.warn {
+        background: linear-gradient(90deg, #d69e22, #fbbf24);
+      }
+
+      .meter-fill.bad {
+        background: linear-gradient(90deg, #e11d48, #fb7185);
+      }
+
+      /* ---------------- Token mix ---------------- */
+
+      .mixbar {
+        display: flex;
+        height: 15px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #1b2130;
+        margin: 4px 0 14px;
+      }
+
+      .mixbar span {
+        height: 100%;
+        min-width: 0;
+        transition: width 0.5s ease;
+      }
+
+      .mixlist {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .mixrow {
+        display: grid;
+        grid-template-columns: 10px minmax(0, 1fr) auto 44px;
+        gap: 8px;
+        align-items: baseline;
+        font-size: 12px;
+      }
+
+      .mixrow .sw {
+        width: 9px;
+        height: 9px;
+        border-radius: 3px;
+        align-self: center;
+      }
+
+      .mixrow .name {
+        color: var(--muted);
+      }
+
+      .mixrow .val {
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        font-weight: 560;
+      }
+
+      .mixrow .pct {
+        color: var(--faint);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---------------- Estimates ---------------- */
+
+      .estimate-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .meters {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+      }
+
+      .erow-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .erow-head .k {
+        color: var(--muted);
+        font-weight: 560;
+      }
+
+      .erow-head .v {
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+        font-weight: 580;
+      }
+
+      .erow-head .v em {
+        color: var(--faint);
+        font-style: normal;
+        font-weight: 450;
+      }
+
+      .ebar {
+        position: relative;
+        height: 8px;
+        border-radius: 999px;
+        background: #1b2130;
+      }
+
+      .efill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #6d3ef0, #8b5cf6 55%, #22d3ee);
+        transition: width 0.5s ease;
+      }
+
+      .efill.warn {
+        background: linear-gradient(90deg, #d69e22, #fbbf24);
+      }
+
+      .efill.bad {
+        background: linear-gradient(90deg, #e11d48, #fb7185);
+      }
+
+      .etick {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.5);
+        transform: translateX(-1px);
+      }
+
+      .etick.typ {
+        background: #fda4af;
+        box-shadow: 0 0 8px rgba(251, 113, 133, 0.6);
+      }
+
+      .erow-foot {
+        margin-top: 4px;
+        color: var(--faint);
+        font-size: 10.8px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .reset-box {
+        border: 1px solid var(--line-2);
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.22);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .reset-box .lbl {
+        color: var(--faint);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        font-weight: 600;
+      }
+
+      .reset-time {
+        font-size: 21px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+
+      .reset-at {
+        color: var(--faint);
+        font-size: 11.5px;
+        margin-top: 2px;
+      }
+
+      .pace {
+        color: var(--muted);
+        font-size: 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 11px;
+      }
+
+      .pace strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .pace.over strong {
+        color: var(--bad);
+      }
+
+      /* ---------------- Explainer ---------------- */
+
+      .facts {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005)),
+          var(--panel);
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .facts summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .facts summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .facts summary::after {
+        content: "+";
+        color: var(--faint);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .facts[open] summary::after {
+        content: "−";
+      }
+
+      .facts[open] summary {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .facts-hint {
+        color: var(--faint);
+        font-size: 11.5px;
+        font-weight: 500;
+        margin-left: auto;
+        margin-right: 4px;
+      }
+
+      .facts-body {
+        padding: 14px 18px 18px;
+        color: var(--muted);
+        font-size: 12.6px;
+        line-height: 1.55;
+      }
+
+      .facts-body ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .facts-body li + li {
+        margin-top: 7px;
+      }
+
+      .facts-body strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .facts-body code {
+        color: #c4b5fd;
+        background: rgba(139, 92, 246, 0.12);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 5px;
+        padding: 1px 5px;
+        font-size: 11.5px;
+      }
+
+      /* ---------------- Console export totals ---------------- */
+
+      .export-totals {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .export-total {
+        border: 1px solid var(--line-2);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.18);
+        padding: 9px 11px;
+        min-width: 0;
+      }
+
+      .export-total .k {
+        color: var(--faint);
+        font-size: 10px;
+        font-weight: 620;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .export-total .v {
+        margin-top: 2px;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 620;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .export-total .s {
+        color: var(--faint);
+        font-size: 10.8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 720px) {
+        .export-totals {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ---------------- Go plan ---------------- */
+
+      .section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 2px 0 12px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 15px;
+        letter-spacing: -0.015em;
+      }
+
+      .section-head p {
+        margin: 2px 0 0;
+        color: var(--faint);
+        font-size: 12px;
+      }
+
+      .plan-badge {
+        border-color: rgba(139, 92, 246, 0.45);
+        background: rgba(139, 92, 246, 0.12);
+        color: #d8ccff;
+        font-weight: 640;
+      }
+
+      .go {
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        background:
+          radial-gradient(900px 280px at 0% 0%, rgba(139, 92, 246, 0.14), transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006)),
+          var(--panel);
+        border-radius: var(--radius);
+        padding: 18px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .go.all {
+        border-color: var(--line-2);
+        background:
+          radial-gradient(900px 280px at 100% 0%, rgba(34, 211, 238, 0.08), transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.006)),
+          var(--panel);
+      }
+
+      .go.all .go-eyebrow {
+        color: var(--accent-2);
+      }
+
+      .go-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .go-eyebrow {
+        color: #b9a6ff;
+        font-size: 10.5px;
+        font-weight: 680;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .go-head h2 {
+        margin: 3px 0 0;
+        font-size: 17px;
+        letter-spacing: -0.02em;
+      }
+
+      .go-head p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      .go-meters {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .go-meter {
+        border: 1px solid var(--line-2);
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.22);
+        padding: 12px 14px;
+        min-width: 0;
+      }
+
+      .go-meter .go-meter-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .go-meter .go-meter-name {
+        color: var(--faint);
+        font-size: 10.5px;
+        font-weight: 650;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .go-meter .go-meter-pct {
+        color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-meter .go-meter-money {
+        margin-top: 6px;
+        font-size: 19px;
+        font-weight: 660;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-meter .go-meter-money small {
+        color: var(--faint);
+        font-size: 12px;
+        font-weight: 520;
+        letter-spacing: 0;
+      }
+
+      .go-meter .go-meter-bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #0b0e15;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        margin-top: 9px;
+      }
+
+      .go-meter .go-meter-bar > i {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 0.35s ease;
+      }
+
+      .go-meter.warn .go-meter-bar > i {
+        background: var(--warn);
+      }
+
+      .go-meter.bad .go-meter-bar > i {
+        background: var(--bad);
+      }
+
+      .go-meter .go-meter-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 7px;
+        color: var(--faint);
+        font-size: 11px;
+        flex-wrap: wrap;
+      }
+
+      .go-meter .go-meter-meta b {
+        color: var(--muted);
+        font-weight: 580;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-activity {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .go-activity .item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.14);
+        padding: 9px 11px;
+        min-width: 0;
+      }
+
+      .go-activity .k {
+        color: var(--faint);
+        font-size: 10px;
+        font-weight: 620;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .go-activity .v {
+        margin-top: 2px;
+        font-size: 15px;
+        font-weight: 630;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-activity .s {
+        color: var(--faint);
+        font-size: 10.8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .traffic {
+        display: flex;
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #0b0e15;
+        border: 1px solid var(--line);
+        margin: 4px 0 9px;
+      }
+
+      .traffic > i {
+        display: block;
+        height: 100%;
+        min-width: 2px;
+        transition: width 0.4s ease;
+      }
+
+      .traffic-legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        color: var(--faint);
+        font-size: 11.3px;
+        margin-bottom: 13px;
+      }
+
+      .traffic-legend > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .traffic-legend .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+      }
+
+      .go-daily {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .go-daily .chip {
+        border: 1px solid var(--line-2);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.16);
+        padding: 6px 9px;
+        color: var(--muted);
+        font-size: 11.5px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-daily .chip b {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .go-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+
+      .go-table th {
+        text-align: left;
+        color: var(--faint);
+        font-size: 10.5px;
+        font-weight: 650;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .go-table td {
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(32, 38, 52, 0.7);
+        color: var(--muted);
+      }
+
+      .go-table tbody tr {
+        transition: background 0.15s ease;
+      }
+
+      .go-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .go-table td.strong {
+        color: var(--text);
+        font-weight: 570;
+      }
+
+      .go-table td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .go-foot {
+        color: var(--faint);
+        font-size: 11.3px;
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+      }
+
+      .go-foot .bad {
+        color: var(--bad);
+      }
+
+      @media (max-width: 860px) {
+        .go-meters,
+        .go-activity {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ---------------- Charts ---------------- */
+
+      .chart {
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .chart svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .chart .bar {
+        transition: opacity 0.15s ease;
+      }
+
+      .chart .bar:hover {
+        opacity: 0.78;
+      }
+
+      .legend {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        color: var(--faint);
+        font-size: 11.5px;
+      }
+
+      .legend .key {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend .swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        background: linear-gradient(180deg, #8b5cf6, #6d3ef0);
+      }
+
+      .legend .line {
+        width: 14px;
+        height: 0;
+        border-top: 1.5px dashed rgba(251, 113, 133, 0.8);
+      }
+
+      .legend .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--bad);
+      }
+
+      .seg {
+        display: inline-flex;
+        padding: 3px;
+        background: #0b0e15;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        gap: 2px;
+      }
+
+      .seg button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--faint);
+        font: inherit;
+        font-size: 11.5px;
+        font-weight: 560;
+        padding: 5px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+      }
+
+      .seg button.active {
+        background: #212842;
+        color: var(--text);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .empty {
+        color: var(--faint);
+        font-size: 12.5px;
+        padding: 22px 4px;
+        text-align: center;
+      }
+
+      /* ---------------- Tables & lists ---------------- */
+
+      .table-wrap {
+        overflow-x: auto;
+        margin: 0 -4px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        min-width: 540px;
+      }
+
+      th {
+        text-align: left;
+        color: var(--faint);
+        font-size: 10.5px;
+        font-weight: 620;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+        color: var(--muted);
+        vertical-align: middle;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.018);
+      }
+
+      td.num,
+      th.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      td.strong {
+        color: var(--text);
+        font-weight: 560;
+      }
+
+      .row-title {
+        color: var(--text);
+        font-weight: 540;
+        max-width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+      }
+
+      .chips {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        border: 1px solid var(--line-2);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 2px 7px;
+        font-size: 10.5px;
+        white-space: nowrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 620;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .badge.hit {
+        background: rgba(251, 113, 133, 0.14);
+        color: #fda4af;
+        border: 1px solid rgba(251, 113, 133, 0.28);
+      }
+
+      .events {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .event {
+        display: flex;
+        gap: 11px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .event:last-child {
+        border-bottom: 0;
+      }
+
+      .event-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--bad);
+        margin-top: 5px;
+        flex: 0 0 auto;
+        box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.12);
+      }
+
+      .event-dot.warn {
+        background: var(--warn);
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
+      }
+
+      .event-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .event-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .event-title {
+        font-size: 12.5px;
+        color: var(--text);
+        font-weight: 540;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .event-time {
+        color: var(--faint);
+        font-size: 11px;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .event-meta {
+        color: var(--faint);
+        font-size: 11.5px;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+      }
+
+      .event-meta strong {
+        color: var(--muted);
+        font-weight: 560;
+      }
+
+      /* ---------------- Footer ---------------- */
+
+      .foot {
+        margin-top: 22px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: var(--faint);
+        font-size: 11.3px;
+      }
+
+      .foot code {
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+        font-size: 10.8px;
+        overflow-wrap: anywhere;
+      }
+
+      .foot-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      /* ---------------- Responsive ---------------- */
+
+      @media (max-width: 980px) {
+        .span-3 {
+          grid-column: span 6;
+        }
+
+        .span-4,
+        .span-5,
+        .span-7,
+        .span-8 {
+          grid-column: span 12;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .app {
+          padding: 18px 14px 36px;
+        }
+
+        .span-3 {
+          grid-column: span 12;
+        }
+
+        .stat-value {
+          font-size: 26px;
+        }
+
+        .card {
+          padding: 15px;
+        }
+
+        .banner-timer {
+          width: 100%;
+          text-align: center;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path
+                d="M8 22V10l8 6 8-6v12"
+                stroke="white"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1 id="brandTitle">Usage</h1>
+            <p id="brandSub">OpenCode plans · local, read-only</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="pill plan-badge" id="planPill" title="Active plan">Free</span>
+          <span class="pill" id="statusPill" aria-live="polite"><span class="dot"></span><span id="statusText">Loading…</span></span>
+          <span class="pill" id="updatedPill" title="Last successful read">Updated –</span>
+          <a class="btn" href="/api/export.csv" download title="Download daily history as CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
+            </svg>
+            CSV
+          </a>
+          <a class="btn" href="/api/export-go.csv" download title="Download Go plan daily activity as CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
+            </svg>
+            Go CSV
+          </a>
+          <a class="btn" href="/api/export-all.csv" download title="Download every provider/plan daily usage as CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
+            </svg>
+            All CSV
+          </a>
+          <a class="btn" href="/api/export.json" download title="Download the full dashboard data as JSON">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
+            </svg>
+            JSON
+          </a>
+          <button class="btn" id="refreshBtn" type="button" title="Re-read the database now">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <div id="errorPanel" class="error-panel hidden">
+        <h3 id="errorTitle">Could not read usage data</h3>
+        <p id="errorText"></p>
+      </div>
+
+      <div id="notice" class="notice hidden"></div>
+
+      <section id="banner" class="banner hidden" aria-live="polite">
+        <div class="banner-icon" id="bannerIcon">!</div>
+        <div class="banner-body">
+          <strong id="bannerTitle"></strong>
+          <span id="bannerText"></span>
+        </div>
+        <div class="banner-timer" id="bannerTimer"></div>
+      </section>
+
+      <section id="allSection" class="go all hidden" aria-label="All providers and plans usage">
+        <div class="go-head">
+          <div>
+            <div class="go-eyebrow">All providers &amp; plans</div>
+            <h2 id="allTitle">Everything in the local database</h2>
+            <p id="allSub">Free, Go, Zen pay-as-you-go, and external APIs.</p>
+          </div>
+          <span class="pill" id="allPill"><span class="dot"></span><span id="allPillText">…</span></span>
+        </div>
+
+        <div class="go-activity" id="allStats"></div>
+        <div id="allTraffic"></div>
+
+        <div class="table-wrap">
+          <table class="go-table" id="allProviderTable">
+            <thead>
+              <tr>
+                <th>Provider / plan</th>
+                <th class="num">Today</th>
+                <th class="num">7d</th>
+                <th class="num">30d tokens</th>
+                <th class="num">30d cost</th>
+                <th class="num" title="Share of 30-day requests">Share</th>
+                <th>Last</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 12px">
+          <table class="go-table" id="allModelTable">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Provider</th>
+                <th class="num">30d req</th>
+                <th class="num">30d tokens</th>
+                <th class="num">30d cost</th>
+                <th>Last</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="go-foot" id="allFoot"></div>
+      </section>
+
+      <section id="goSection" class="go hidden" aria-label="OpenCode Go plan usage">
+        <div class="go-head">
+          <div>
+            <div class="go-eyebrow">OpenCode Go plan</div>
+            <h2 id="goTitle">Plan meters</h2>
+            <p id="goSub">Exact money meters reported by OpenCode Console.</p>
+          </div>
+          <span class="pill" id="goPill"><span class="dot"></span><span id="goPillText">Loading</span></span>
+        </div>
+
+        <div class="go-meters" id="goMeters"></div>
+        <div class="go-activity" id="goActivity"></div>
+        <div class="go-daily" id="goDaily"></div>
+
+        <div class="table-wrap">
+          <table class="go-table" id="goModelTable">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th class="num">Requests</th>
+                <th class="num">Tokens</th>
+                <th class="num">Sessions</th>
+                <th>Last used</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="go-foot" id="goFoot"></div>
+      </section>
+
+      <div class="section-head hidden" id="freeHead">
+        <div>
+          <h2>Free tier</h2>
+          <p id="freeHeadText">24-hour request bucket, counted per network — separate from the Go meters.</p>
+        </div>
+      </div>
+
+      <section class="grid" aria-label="Current free-tier window and UTC-today usage">
+        <article class="card stat span-3">
+          <div class="stat-label">Free requests · current window</div>
+          <div class="stat-value" id="reqToday">–</div>
+          <div class="stat-sub" id="reqSub">Loading…</div>
+          <div
+            class="meter"
+            role="progressbar"
+            aria-label="Observed usage vs last refused window"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            id="reqMeterWrap"
+          >
+            <div class="meter-fill" id="reqMeter"></div>
+          </div>
+          <div class="stat-foot" id="reqFoot"></div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label">Free tokens · UTC today</div>
+          <div class="stat-value" id="tokenToday">–</div>
+          <div class="stat-sub" id="tokenSub">input · output · cache</div>
+          <div class="stat-foot" id="tokenFoot"></div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label">Free list value · UTC today</div>
+          <div class="stat-value" id="valueToday">–</div>
+          <div class="stat-sub" id="valueSub">what these tokens would cost paid</div>
+          <div class="stat-foot" id="valueFoot">Free requests are billed at $0</div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label" title="Historical boundary, not the server's published cap">Headroom vs last refusal</div>
+          <div class="stat-value" id="ceilingToday">–</div>
+          <div class="stat-sub" id="ceilingSub">vs the last refused window</div>
+          <div class="stat-foot" id="ceilingFoot"></div>
+        </article>
+      </section>
+
+      <section class="grid" aria-label="Token totals">
+        <article class="card stat span-3">
+          <div class="stat-label">Free tokens · current window</div>
+          <div class="stat-value" id="tokenWindow">–</div>
+          <div class="stat-sub" id="tokenWindowSub">24h window</div>
+          <div class="stat-foot" id="tokenWindowFoot"></div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label">Free tokens · last 7 days</div>
+          <div class="stat-value" id="token7d">–</div>
+          <div class="stat-sub" id="token7dSub">–</div>
+          <div class="stat-foot" id="token7dFoot"></div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label">Free tokens · last 30 days</div>
+          <div class="stat-value" id="token30d">–</div>
+          <div class="stat-sub" id="token30dSub">–</div>
+          <div class="stat-foot" id="token30dFoot"></div>
+        </article>
+
+        <article class="card stat span-3">
+          <div class="stat-label">Free tokens · tracked history</div>
+          <div class="stat-value" id="tokenTracked">–</div>
+          <div class="stat-sub" id="tokenTrackedSub">–</div>
+          <div class="stat-foot" id="tokenTrackedFoot"></div>
+        </article>
+      </section>
+
+      <details class="facts">
+        <summary>
+          <span>What is exact — and what isn’t</span>
+          <span class="facts-hint">the cap is not published</span>
+        </summary>
+        <div class="facts-body">
+          <ul>
+            <li>
+              <strong>Request-counted, not token-counted.</strong> The free tier is a 24-hour request bucket keyed
+              to your public network and shared by every app or device on it. Token totals are information, not the
+              trigger.
+            </li>
+            <li>
+              <strong>The cap is private and dynamic.</strong> OpenCode keeps it in the server-side
+              <code>ZEN_LIMITS</code> secret and exposes no remaining-quota API or header. The only published
+              free-model number is LongCat 2.5 Free at 100 requests/day.
+            </li>
+            <li>
+              <strong>The only exact reset is a 429.</strong> While a refusal is pending, the countdown uses the
+              server’s <code>retryAfterMs</code>. Otherwise it is a range: 24h after the first request this machine
+              saw, and earlier if another device on the network opened the window first.
+            </li>
+            <li>
+              <strong>“Headroom” is not remaining quota.</strong> It is the last refused window’s observed request
+              count minus this window’s count — a historical boundary, not the server’s cap.
+            </li>
+          </ul>
+        </div>
+      </details>
+
+      <section class="grid">
+        <article class="card span-5">
+          <div class="card-head">
+            <div>
+              <h2>Free token mix</h2>
+              <p id="tokenMixSub">Free-tier token components for the selected range.</p>
+            </div>
+            <div class="seg" id="tokenScopeToggle" role="group" aria-label="Token mix range">
+              <button type="button" data-scope="last7Days">7d</button>
+              <button type="button" data-scope="last30Days" class="active">30d</button>
+              <button type="button" data-scope="tracked">All</button>
+            </div>
+          </div>
+          <div class="mixbar" id="tokenMixBar" role="img" aria-label="Token component mix"></div>
+          <div class="mixlist" id="tokenMixList"></div>
+          <div class="stat-foot" id="tokenMixFoot" style="margin-top: 12px"></div>
+        </article>
+
+        <article class="card span-7">
+          <div class="card-head">
+            <div>
+              <h2>Free token history</h2>
+              <p id="tokenHistorySub">Per-UTC-day free-token breakdown from the local database.</p>
+            </div>
+            <div class="seg" id="tokenHistoryToggle" role="group" aria-label="Token history days">
+              <button type="button" data-days="7">7d</button>
+              <button type="button" data-days="14" class="active">14d</button>
+              <button type="button" data-days="30">30d</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="tokenTable">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th class="num">Requests</th>
+                  <th class="num">Input</th>
+                  <th class="num">Output</th>
+                  <th class="num">Reasoning</th>
+                  <th class="num">Cache read</th>
+                  <th class="num">Cache write</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="tokenTableEmpty">No token data in this range.</div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card span-8">
+          <div class="card-head">
+            <div>
+              <h2>Free daily usage</h2>
+              <p id="historySub">Loading…</p>
+            </div>
+            <div class="seg" id="metricToggle" role="group" aria-label="Chart metric">
+              <button type="button" data-metric="requests" class="active">Requests</button>
+              <button type="button" data-metric="tokens">Tokens</button>
+              <button type="button" data-metric="listValue">Value</button>
+            </div>
+          </div>
+          <div class="chart" id="historyChart"></div>
+          <div class="legend">
+            <span class="key"><span class="swatch"></span> <span id="legendMetric">free requests</span></span>
+            <span class="key"><span class="dot"></span> refusal observed</span>
+          </div>
+        </article>
+
+        <article class="card span-4 estimate-card">
+          <div class="card-head">
+            <div>
+              <h2>Refusal boundaries</h2>
+              <p>Requests this machine observed in each announced 24h window before a refusal. OpenCode publishes no cap or remaining count.</p>
+            </div>
+          </div>
+          <div class="meters" id="estimateMeters"></div>
+          <div class="reset-box">
+            <div>
+              <div class="lbl">Resets in</div>
+              <div class="reset-time" id="resetCountdown">–</div>
+              <div class="reset-at" id="resetAtLabel">waiting for data</div>
+              <div class="reset-at" id="resetRange"></div>
+            </div>
+            <div style="text-align: right">
+              <div class="lbl">Window</div>
+              <div style="font-size: 12.5px; color: var(--muted); margin-top: 4px" id="windowRange">24h window</div>
+            </div>
+          </div>
+          <div class="pace" id="paceLabel">–</div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card span-7">
+          <div class="card-head">
+            <div>
+              <h2>Free requests today by hour</h2>
+              <p id="hourlySub">UTC hours · refusals are marked red</p>
+            </div>
+          </div>
+          <div class="chart" id="hourlyChart"></div>
+        </article>
+
+        <article class="card span-5">
+          <div class="card-head">
+            <div>
+              <h2>Recent refusals</h2>
+              <p>Free-limit errors recorded in the last 48 hours.</p>
+            </div>
+          </div>
+          <div class="events" id="eventList"></div>
+          <div class="empty hidden" id="eventEmpty">No free-limit refusals in the last 48 hours.</div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card span-12">
+          <div class="card-head">
+            <div>
+              <h2>Refusal boundaries</h2>
+              <p id="hitSub">Each row is one observed server reset boundary, with the requests this machine recorded inside that announced 24h window before the refusal.</p>
+            </div>
+            <div class="seg" id="hitToggle" role="group" aria-label="Refusal rows to show">
+              <button type="button" data-hits="5" class="active">5</button>
+              <button type="button" data-hits="all">All</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="hitTable">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Refused at</th>
+                  <th class="num">Requests, window</th>
+                  <th class="num">Tokens, window</th>
+                  <th class="num">List value</th>
+                  <th class="num">Server day</th>
+                  <th>Reset</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="hitEmpty">No refusals recorded in the local history.</div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card span-7">
+          <div class="card-head">
+            <div>
+              <h2>Free sessions today</h2>
+              <p>Top sessions by free requests since 00:00 UTC.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="sessionTable">
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th class="num">Requests</th>
+                  <th class="num">Tokens</th>
+                  <th class="num">Value</th>
+                  <th>Last</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="sessionEmpty">No free requests today yet.</div>
+        </article>
+
+        <article class="card span-5">
+          <div class="card-head">
+            <div>
+              <h2>Free models</h2>
+              <p id="modelSub">Free models in the selected window.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="modelTable">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th class="num">Requests</th>
+                  <th class="num">Tokens</th>
+                  <th class="num">Value</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="modelEmpty">No free-model usage in the selected window.</div>
+        </article>
+      </section>
+
+      <section class="grid" id="serverSection">
+        <article class="card span-12">
+          <div class="card-head">
+            <div>
+              <h2>Console server log</h2>
+              <p>
+                Optional sync of OpenCode's server-side request log
+                (<code>GET /console/api/request-logs?category=inference</code>) — the only public source of
+                server-observed counts, including other devices or apps signed in to the same account (which
+                may be on another network/IP).
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <span class="pill" id="consolePill"><span class="dot"></span><span id="consoleStatus">Checking…</span></span>
+              <button class="btn" id="consoleSyncBtn" type="button" title="Fetch the latest request logs now">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
+                </svg>
+                Sync now
+              </button>
+            </div>
+          </div>
+          <div id="consoleSetup" class="notice hidden">
+            Not configured. To enable: open
+            <a href="https://opencode.ai/console" target="_blank" rel="noreferrer">opencode.ai/console</a>, sign in,
+            then copy the session <code>Cookie</code> header from DevTools → Network → any
+            <code>/console/api/</code> request into <code>tracker.config.json</code> under
+            <code>console.cookie</code> and restart. The <code>orgId</code> is auto-discovered from the session.
+            Note: free-model requests appear here only when the OpenCode CLI is signed in
+            (<code>opencode auth login opencode</code>) — anonymous, IP-bucketed usage is not attributed to your
+            account server-side.
+          </div>
+          <div class="table-wrap">
+            <table id="serverTable">
+              <thead>
+                <tr>
+                  <th>UTC day</th>
+                  <th class="num">Server free reqs</th>
+                  <th class="num">Local free reqs</th>
+                  <th class="num">Server − local</th>
+                  <th class="num">Server tokens</th>
+                  <th class="num">Failed attempts</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="serverEmpty">
+            No server data yet. Sync once configured — retention is 30 days.
+          </div>
+          <div class="export-totals hidden" id="exportTotals"></div>
+          <div class="event-meta" id="consoleFoot" style="padding-top: 8px"></div>
+        </article>
+      </section>
+
+      <footer class="foot">
+        <div class="foot-lines">
+          <span>OpenCode stores this data locally. The tracker only reads it.</span>
+          <span
+            >Database <code id="dbPath">–</code> · Log <code id="logPath">–</code></span
+          >
+        </div>
+        <div class="foot-lines" style="text-align: right">
+          <span id="windowLabel">–</span>
+          <span>Timezone <span id="tzLabel">–</span> · free tier resets on a server-provided 24-hour boundary</span>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+      const state = {
+        data: null,
+        metric: "requests",
+        tokenScope: "last30Days",
+        tokenHistoryDays: 14,
+        hitLimit: 5,
+        pollTimer: null,
+        lastFetch: 0,
+      };
+
+      const nfInt = new Intl.NumberFormat();
+      const nfCompact = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+      const nf1 = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+
+      const TOKEN_PARTS = [
+        { key: "input", label: "Input", color: "#8b5cf6" },
+        { key: "output", label: "Output", color: "#22d3ee" },
+        { key: "reasoning", label: "Reasoning", color: "#fbbf24" },
+        { key: "cacheRead", label: "Cache read", color: "#34d399" },
+        { key: "cacheWrite", label: "Cache write", color: "#fb7185" },
+      ];
+
+      const fmtPct = (value, total) =>
+        total > 0 ? Math.round((Math.max(0, Number(value) || 0) / total) * 100) : 0;
+
+      const fmtShare = (value, total) => {
+        const v = Math.max(0, Number(value) || 0);
+        const pct = fmtPct(v, total);
+        return v > 0 && pct === 0 ? "<1%" : pct + "%";
+      };
+
+      const tokenTitle = (tokens = {}) =>
+        `${fmtInt(tokens.input)} input · ${fmtInt(tokens.output)} output · ${fmtInt(
+          tokens.reasoning,
+        )} reasoning · ${fmtInt(tokens.cacheRead)} cache read · ${fmtInt(tokens.cacheWrite)} cache write`;
+
+      const setText = (id, value) => {
+        const el = $(id);
+        if (el) el.textContent = value;
+      };
+
+      const fmtInt = (value) => nfInt.format(Math.round(Number(value) || 0));
+      const fmtCompact = (value) => nfCompact.format(Number(value) || 0);
+
+      function fmtUsd(value) {
+        const v = Number(value) || 0;
+        if (v === 0) return "$0.00";
+        if (v >= 1000) return "$" + nfInt.format(Math.round(v));
+        if (v >= 10) return "$" + v.toFixed(2);
+        if (v >= 0.1) return "$" + v.toFixed(2);
+        return "$" + v.toFixed(3);
+      }
+
+      function prettyModel(id) {
+        if (!id) return "Unknown model";
+        return String(id)
+          .replace(/-free$/i, " Free")
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+
+      function fmtDuration(ms) {
+        if (!Number.isFinite(ms) || ms <= 0) return "0s";
+        const total = Math.floor(ms / 1000);
+        const days = Math.floor(total / 86400);
+        const hours = Math.floor((total % 86400) / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = total % 60;
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        if (minutes > 0) return `${minutes}m ${seconds}s`;
+        return `${seconds}s`;
+      }
+
+      function fmtClock(iso) {
+        if (!iso) return "–";
+        return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function fmtDateTime(iso) {
+        if (!iso) return "–";
+        const d = new Date(iso);
+        return (
+          d.toLocaleDateString([], { month: "short", day: "numeric" }) +
+          " " +
+          d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        );
+      }
+
+      function fmtDayLabel(key) {
+        const [y, m, d] = String(key).split("-").map(Number);
+        return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
+      }
+
+      function escapeXml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* Charts                                                              */
+      /* ------------------------------------------------------------------ */
+
+      function niceMax(value) {
+        if (!Number.isFinite(value) || value <= 0) return 1;
+        const exp = Math.floor(Math.log10(value));
+        const base = 10 ** exp;
+        const f = value / base;
+        let m = 10;
+        if (f <= 1) m = 1;
+        else if (f <= 2) m = 2;
+        else if (f <= 2.5) m = 2.5;
+        else if (f <= 5) m = 5;
+        return m * base;
+      }
+
+      function drawBars(container, items, options) {
+        if (!container) return;
+        const width = Math.max(300, container.clientWidth || 640);
+        const height = options.height || 226;
+        const padL = 46;
+        const padR = 14;
+        const padT = 16;
+        const padB = 26;
+        const innerW = width - padL - padR;
+        const innerH = height - padT - padB;
+        const n = items.length;
+        const values = items.map((i) => Number(i.value) || 0);
+        const lineValue = Number(options.estimateLine) || 0;
+        const yMax = niceMax(Math.max(lineValue, ...values, 1));
+        const gap = n > 20 ? 3 : n > 10 ? 5 : 8;
+        const bw = Math.max(2, (innerW - gap * Math.max(0, n - 1)) / Math.max(1, n));
+        const formatAxis = options.formatAxis || fmtCompact;
+        const gradId = "grad-" + container.id;
+
+        const yOf = (value) => padT + innerH - (Math.min(value, yMax) / yMax) * innerH;
+
+        let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${escapeXml(
+          options.ariaLabel || "usage chart",
+        )}">`;
+        svg += `<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">`;
+        svg += `<stop offset="0%" stop-color="${options.colorTop || "#a78bfa"}"/>`;
+        svg += `<stop offset="100%" stop-color="${options.colorBottom || "#6d3ef0"}"/>`;
+        svg += `</linearGradient></defs>`;
+
+        for (let i = 0; i <= 4; i += 1) {
+          const y = padT + (innerH * i) / 4;
+          const value = (yMax * (4 - i)) / 4;
+          svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.055)" stroke-width="1"/>`;
+          svg += `<text x="${padL - 9}" y="${(y + 3.5).toFixed(1)}" fill="#6b7488" font-size="10" text-anchor="end">${escapeXml(
+            formatAxis(value),
+          )}</text>`;
+        }
+
+        if (lineValue > 0) {
+          const y = yOf(lineValue);
+          svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(1)}" stroke="rgba(251,113,133,0.65)" stroke-width="1.3" stroke-dasharray="4 4"/>`;
+          svg += `<text x="${width - padR}" y="${(y - 5).toFixed(1)}" fill="#fda4af" font-size="9.5" text-anchor="end">${escapeXml(
+            options.estimateLabel || "estimate",
+          )}</text>`;
+        }
+
+        items.forEach((item, index) => {
+          const x = padL + index * (bw + gap);
+          const value = Number(item.value) || 0;
+          const y = yOf(value);
+          const h = Math.max(value > 0 ? 1.5 : 0, padT + innerH - y);
+          const title = escapeXml(item.title || `${item.label}: ${value}`);
+          svg += `<g class="bar"><title>${title}</title>`;
+          if (h > 0) {
+            svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(
+              1,
+            )}" rx="${Math.min(3, bw / 2).toFixed(1)}" fill="url(#${gradId})"/>`;
+          }
+          if (item.hit) {
+            const cx = x + bw / 2;
+            const cy = Math.max(padT + 4, y - 6);
+            svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.1" fill="#fb7185" stroke="#0b0d12" stroke-width="1.4"/>`;
+          }
+          svg += `</g>`;
+        });
+
+        const labelEvery = Math.max(1, Math.ceil(n / 8));
+        const labelIndices = [];
+        for (let index = 0; index < n; index += labelEvery) {
+          if (n - 1 - index > 1) labelIndices.push(index);
+        }
+        if (n > 0) labelIndices.push(n - 1);
+        for (const index of labelIndices) {
+          const item = items[index];
+          const x = padL + index * (bw + gap) + bw / 2;
+          svg += `<text x="${x.toFixed(1)}" y="${(height - 8).toFixed(1)}" fill="#6b7488" font-size="9.5" text-anchor="middle">${escapeXml(
+            item.label,
+          )}</text>`;
+        }
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* Render                                                              */
+      /* ------------------------------------------------------------------ */
+
+      function renderStatus(data) {
+        const pill = $("statusPill");
+        pill.className = "pill";
+        const status = data.meta.status;
+        const go = data.go || {};
+        const goDetected = data.meta.goDetected === true;
+        const goMonth = go.meters && go.meters.month ? go.meters.month : null;
+        let label = "Active";
+        if (goDetected) {
+          const pct = goMonth && Number.isFinite(goMonth.percent) ? goMonth.percent : 0;
+          if (goMonth && pct >= 100) {
+            pill.classList.add("bad");
+            label = "Go month at limit";
+          } else if (goMonth && pct >= 90) {
+            pill.classList.add("warn");
+            label = "Go month near limit";
+          } else if (goMonth) {
+            pill.classList.add("good");
+            label = "Go active";
+          } else {
+            pill.classList.add("warn");
+            label = "Go · local only";
+          }
+        } else if (data.meta.paidDetected === true) {
+          pill.classList.add("good");
+          label = `${data.meta.providerCount || 1} provider${
+            (data.meta.providerCount || 1) === 1 ? "" : "s"
+          } tracked`;
+        } else if (status === "limited") {
+          pill.classList.add("bad");
+          label = "At limit";
+        } else if (status === "limit-banner") {
+          pill.classList.add("warn");
+          label = "Recovered";
+        } else if (status === "unknown") {
+          label = "No usage yet";
+        } else {
+          pill.classList.add("good");
+          label = "Free requests working";
+        }
+        setText("statusText", label);
+        $("updatedPill").textContent = "Updated " + fmtClock(data.meta.generatedAt);
+        $("updatedPill").title = "Last successful read: " + fmtDateTime(data.meta.generatedAt);
+      }
+
+      function renderBanner(data) {
+        const banner = $("banner");
+        const status = data.meta.status;
+        // A free-tier refusal is not a block for a Go user; the plan status
+        // pill and the free section carry that state without a page-wide alert.
+        if (
+          data.meta.goDetected === true ||
+          data.meta.paidDetected === true ||
+          (status !== "limited" && status !== "limit-banner")
+        ) {
+          banner.classList.add("hidden");
+          return;
+        }
+        banner.classList.remove("hidden");
+        banner.classList.toggle("warn", status === "limit-banner");
+        $("bannerIcon").textContent = status === "limited" ? "!" : "i";
+        const event = data.limit.activeEvent || data.limit.lastEvent;
+        if (status === "limited") {
+          const sampled =
+            event && Number.isFinite(event.requestsAt) && event.requestsAt > 0
+              ? ` after ${fmtInt(event.requestsAt)} free requests in that 24h window`
+              : "";
+          setText("bannerTitle", "Free usage limit reached");
+          setText(
+            "bannerText",
+            event
+              ? `The last free request was refused ${fmtDateTime(event.at)}${sampled}. No free request has succeeded since.`
+              : "The most recent free-model request was refused by the free-usage limit.",
+          );
+        } else {
+          const early = data.window && data.window.recoveredEarly;
+          const successes = Number.isFinite(data.limit.successAfterActiveEvent)
+            ? data.limit.successAfterActiveEvent
+            : data.limit.successAfterLastEvent;
+          setText("bannerTitle", early ? "Recovered — capacity freed up" : "Recovered — requests are working");
+          setText(
+            "bannerText",
+            event
+              ? `A free-limit error was recorded ${fmtDateTime(event.at)}, but ${fmtInt(
+                  successes,
+                )} free request(s) succeeded afterwards.${
+                  early
+                    ? " The free tier frees capacity continuously, so requests can succeed before the stated reset — the OpenCode-confirmed reset below still stands."
+                    : ""
+                }`
+              : "A free-limit error was recorded, but free requests succeeded afterwards.",
+          );
+        }
+        const resetMs = data.meta.resetAt ? Date.parse(data.meta.resetAt) - Date.now() : null;
+        $("bannerTimer").textContent =
+          resetMs != null && Number.isFinite(resetMs)
+            ? (data.meta.resetSource === "server" ? "Resets in " : "Estimated reset in ") + fmtDuration(resetMs)
+            : "Reset time unknown";
+      }
+
+      function renderGo(data) {
+        const go = data.go || {};
+        const detected = go.detected === true;
+        const plan = go.plan || {};
+        const meters = go.meters || {};
+        const activity = go.activity || null;
+        const local = go.local || {};
+
+        $("goSection").classList.toggle("hidden", !detected);
+        $("freeHead").classList.toggle("hidden", !detected);
+        setText(
+          "freeHeadText",
+          data.meta.status === "limited"
+            ? `Free tier is refused until its reset; ${
+                data.meta.goDetected ? "Go" : "other provider"
+              } usage below is unaffected.`
+            : "24-hour request bucket, counted per network — separate from the other plans.",
+        );
+        const all = data.all || {};
+        const paid = data.meta.paidDetected === true;
+        const providerCount = data.meta.providerCount || (all.providerCount || 0);
+        $("planPill").textContent = detected
+          ? `${plan.productName || "Go"}${providerCount > 1 ? ` +${providerCount - 1}` : ""}`
+          : paid
+            ? providerCount > 1
+              ? `${providerCount} providers`
+              : "Paid"
+            : "Free";
+        $("planPill").title = `Active plans: ${(data.meta.plans || ["Free tier"]).join(", ")}${
+          detected && plan.accessEndsAt
+            ? ` · Go renews ${new Date(plan.accessEndsAt).toLocaleDateString()}`
+            : ""
+        }`;
+        $("brandTitle").textContent = "Usage";
+        $("brandSub").textContent = detected
+          ? "OpenCode Go + free tier + external APIs · local, read-only"
+          : paid
+            ? "OpenCode plans + external APIs · local, read-only"
+            : "OpenCode free models · local, read-only";
+
+        if (!detected) {
+          $("goMeters").textContent = "";
+          $("goActivity").textContent = "";
+          $("goDaily").textContent = "";
+          $("goModelTable").querySelector("tbody").textContent = "";
+          return;
+        }
+
+        const make = (tag, className, text) => {
+          const node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text != null) node.textContent = text;
+          return node;
+        };
+        const dateLabel = (iso) =>
+          iso ? new Date(iso).toLocaleDateString([], { month: "short", day: "numeric" }) : "–";
+
+        setText("goTitle", `${plan.productName || "Go"} plan meters`);
+        const periodStart = activity && activity.startsAt ? activity.startsAt : plan.accessStartsAt;
+        setText(
+          "goSub",
+          meters.month
+            ? `Exact money meters from OpenCode Console${
+                periodStart ? ` · current period since ${dateLabel(periodStart)}` : ""
+              }.`
+            : "Console meters are unavailable; this section shows locally observed Go requests.",
+        );
+
+        const pill = $("goPill");
+        pill.className = "pill";
+        if (go.error) {
+          pill.classList.add("warn");
+          setText("goPillText", "Meters stale");
+        } else if (meters.month) {
+          pill.classList.add("good");
+          setText("goPillText", "Meters live");
+        } else {
+          pill.classList.add("warn");
+          setText("goPillText", "Local only");
+        }
+
+        const wrap = $("goMeters");
+        wrap.textContent = "";
+        for (const key of ["fiveHour", "week", "month"]) {
+          const meter = meters[key];
+          if (!meter) continue;
+          const pct = Number.isFinite(meter.percent) ? meter.percent : 0;
+          const card = make("div", "go-meter");
+          card.classList.toggle("warn", pct >= 90 && pct < 100);
+          card.classList.toggle("bad", pct >= 100);
+
+          const top = make("div", "go-meter-top");
+          top.append(
+            make("span", "go-meter-name", meter.label),
+            make("span", "go-meter-pct", meter.percent == null ? "–" : `${nf1.format(meter.percent)}%`),
+          );
+
+          const money = make("div", "go-meter-money");
+          money.append(fmtUsd(meter.usedUsd), make("small", null, ` / ${fmtUsd(meter.limitUsd)}`));
+
+          const bar = make("div", "go-meter-bar");
+          const fill = make("i");
+          fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+          bar.append(fill);
+
+          const meta = make("div", "go-meter-meta");
+          const reset = make("span");
+          reset.dataset.goReset = key;
+          meta.append(make("span", null, `${fmtUsd(meter.remainingUsd)} left`), reset);
+          card.title = `${meter.label} meter: $${meter.usedUsd} of $${meter.limitUsd} used. The meter and the activity list are separate snapshots and can differ (plan pricing/credits), so use the meter for the quota.`;
+          card.append(top, money, bar, meta);
+          wrap.append(card);
+        }
+        if (!wrap.childElementCount) {
+          wrap.append(
+            make(
+              "div",
+              "empty",
+              "No Go meters yet. Configure console.cookie or press Sync now to fetch them.",
+            ),
+          );
+        }
+
+        const totals = activity && activity.totals ? activity.totals : null;
+        const activityWrap = $("goActivity");
+        activityWrap.textContent = "";
+        const activitySpecs = [
+          [
+            "Period requests",
+            totals ? fmtInt(totals.requests) : fmtInt(local.today ? local.today.requests : 0),
+            totals ? "Console, billing period" : "local today",
+          ],
+          [
+            "Period tokens",
+            fmtCompact(totals ? totals.tokens : local.today ? local.today.tokens.total : 0),
+            totals ? "Console, billing period" : "local today",
+          ],
+          [
+            "Period value",
+            totals ? fmtUsd(totals.costUsd) : "–",
+            totals ? "list cost · covered by Go" : "Console unavailable",
+          ],
+          [
+            "Billing period",
+            plan.accessEndsAt ? dateLabel(plan.accessEndsAt) : "–",
+            plan.accessStartsAt ? `since ${dateLabel(plan.accessStartsAt)}` : "renews monthly",
+          ],
+        ];
+        for (const [label, value, sub] of activitySpecs) {
+          const item = make("div", "item");
+          item.append(
+            make("div", "k", label),
+            make("div", "v", value),
+            make("div", "s", sub),
+          );
+          activityWrap.append(item);
+        }
+
+        const daily = $("goDaily");
+        daily.textContent = "";
+        if (activity && activity.daily.length) {
+          for (const day of activity.daily.slice(-7)) {
+            const chip = make("span", "chip");
+            const strong = make("b", null, day.date);
+            chip.append(
+              strong,
+              ` · ${fmtInt(day.requests)} req · ${fmtCompact(day.tokens)} tok · ${fmtUsd(day.costUsd)}`,
+            );
+            daily.append(chip);
+          }
+        } else {
+          daily.append(make("span", "chip", "No Console daily activity yet"));
+        }
+
+        const byModel = new Map();
+        for (const model of local.models || []) {
+          byModel.set(model.id, {
+            id: model.id,
+            requests: model.requests,
+            tokens: model.tokens ? model.tokens.total : 0,
+            sessions: model.sessions,
+            lastAt: model.lastAt,
+            consoleRequests: null,
+          });
+        }
+        for (const model of (activity && activity.models) || []) {
+          const current = byModel.get(model.model) || {
+            id: model.model,
+            requests: 0,
+            tokens: 0,
+            sessions: 0,
+            lastAt: null,
+            consoleRequests: null,
+          };
+          current.consoleRequests = model.requests;
+          // The Console number is the billing-period count; prefer it over the
+          // local history-wide count so the row matches the period totals.
+          current.requests = model.requests;
+          byModel.set(model.model, current);
+        }
+        const rows = [...byModel.values()].sort((a, b) => b.requests - a.requests).slice(0, 10);
+        const tbody = $("goModelTable").querySelector("tbody");
+        tbody.textContent = "";
+        if (rows.length) {
+          for (const model of rows) {
+            const tr = document.createElement("tr");
+            const name = make("td", "strong", prettyModel(model.id));
+            const req = make("td", "num", fmtInt(model.requests));
+            req.title = model.consoleRequests != null ? "Console billing-period requests" : "local requests";
+            const tok = make("td", "num", model.tokens ? fmtCompact(model.tokens) : "–");
+            const ses = make("td", "num", model.sessions ? fmtInt(model.sessions) : "–");
+            const last = make("td", null, model.lastAt ? fmtClock(model.lastAt) : "–");
+            tr.append(name, req, tok, ses, last);
+            tbody.append(tr);
+          }
+          $("goModelTable").classList.remove("hidden");
+        } else {
+          $("goModelTable").classList.add("hidden");
+        }
+
+        const foot = $("goFoot");
+        foot.textContent = "";
+        const bits = [];
+        if (plan.accessEndsAt) {
+          bits.push(
+            `Access ${dateLabel(plan.accessStartsAt)} → ${dateLabel(plan.accessEndsAt)}${
+              plan.cancelAtPeriodEnd ? " · cancels at period end" : ""
+            }`,
+          );
+        }
+        bits.push(go.fetchedAt ? `Meters synced ${fmtDateTime(go.fetchedAt)}` : "Meters not synced yet");
+        if (local.detected) {
+          bits.push(`${fmtInt(local.today.requests)} Go requests today in the local database`);
+          const goTokens = (entry) =>
+            entry && entry.tokens ? fmtCompact(entry.tokens.total) : "–";
+          bits.push(
+            `Local Go tokens 7d ${goTokens(local.last7Days)} · 30d ${goTokens(
+              local.last30Days,
+            )} · all ${goTokens(local.tracked)}`,
+          );
+        }
+        foot.append(bits.join(" · "));
+        if (go.error) {
+          foot.append(" · ");
+          foot.append(make("span", "bad", go.error));
+        }
+
+        tickGo();
+      }
+
+      function renderAll(data) {
+        const all = data.all || {};
+        const show =
+          all.detected === true &&
+          ((all.providerCount || 0) > 1 || (all.kinds || []).some((kind) => kind !== "free"));
+        $("allSection").classList.toggle("hidden", !show);
+        if (!show) {
+          $("allStats").textContent = "";
+          $("allProviderTable").querySelector("tbody").textContent = "";
+          $("allModelTable").querySelector("tbody").textContent = "";
+          return;
+        }
+
+        const make = (tag, className, text) => {
+          const node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text != null) node.textContent = text;
+          return node;
+        };
+        const lastLabel = (iso) => {
+          if (!iso) return "–";
+          const date = new Date(iso);
+          return date.toDateString() === new Date().toDateString()
+            ? fmtClock(iso)
+            : date.toLocaleDateString([], { month: "short", day: "numeric" });
+        };
+
+        setText(
+          "allSub",
+          `${all.providerCount} ${all.providerCount === 1 ? "provider" : "providers"} · ${(
+            all.plans || []
+          ).join(" + ")} · local cost reported by OpenCode.`,
+        );
+        const pill = $("allPill");
+        pill.className = "pill good";
+        setText("allPillText", "All plans");
+
+        const stats = $("allStats");
+        stats.textContent = "";
+        const today = all.today || {};
+        const specs = [
+          [
+            "Today · requests",
+            fmtInt(today.requests),
+            `${all.providerCount} ${all.providerCount === 1 ? "provider" : "providers"}`,
+          ],
+          [
+            "Today · tokens",
+            fmtCompact(today.tokens ? today.tokens.total : 0),
+            today.tokens ? `${fmtCompact(today.tokens.input)} in · ${fmtCompact(today.tokens.output)} out` : "–",
+          ],
+          ["Today · local cost", fmtUsd(today.costUsd), "subscriptions can report $0"],
+          [
+            "Last 7 days",
+            `${fmtInt(all.last7Days ? all.last7Days.requests : 0)} req`,
+            `${fmtCompact(all.last7Days && all.last7Days.tokens ? all.last7Days.tokens.total : 0)} tok · ${fmtUsd(
+              all.last7Days ? all.last7Days.costUsd : 0,
+            )}`,
+          ],
+        ];
+        for (const [label, value, sub] of specs) {
+          const item = make("div", "item");
+          item.append(make("div", "k", label), make("div", "v", value), make("div", "s", sub));
+          stats.append(item);
+        }
+
+        const colors = { free: "#8b5cf6", go: "#22d3ee", zen: "#fbbf24", external: "#34d399" };
+        const traffic = $("allTraffic");
+        traffic.textContent = "";
+        const bar = make("div", "traffic");
+        const legend = make("div", "traffic-legend");
+        for (const provider of all.providers || []) {
+          const share = Math.max(0, Math.min(100, provider.sharePct || 0));
+          const color = colors[provider.kind] || "#8b5cf6";
+          if (share > 0) {
+            const segment = make("i");
+            segment.style.width = `${share}%`;
+            segment.style.background = color;
+            segment.title = `${provider.providerName}: ${nf1.format(share)}% of 30-day requests`;
+            bar.append(segment);
+          }
+          const item = make("span");
+          const dot = make("span", "dot");
+          dot.style.background = color;
+          item.append(dot, `${provider.providerName} · ${nf1.format(share)}%`);
+          legend.append(item);
+        }
+        traffic.append(bar, legend);
+
+        const providerBody = $("allProviderTable").querySelector("tbody");
+        providerBody.textContent = "";
+        for (const provider of all.providers || []) {
+          const tr = document.createElement("tr");
+          const name = make("td", "strong");
+          name.append(make("div", null, provider.providerName));
+          const plan = make("div", "event-meta", provider.plan);
+          plan.style.marginTop = "1px";
+          name.append(plan);
+
+          const todayReq = make("td", "num", fmtInt(provider.today ? provider.today.requests : 0));
+          const weekReq = make("td", "num", fmtInt(provider.last7Days ? provider.last7Days.requests : 0));
+          const monthTok = make(
+            "td",
+            "num",
+            fmtCompact(provider.last30Days && provider.last30Days.tokens ? provider.last30Days.tokens.total : 0),
+          );
+          const included = provider.kind === "go" || provider.kind === "free";
+          const monthCost = make(
+            "td",
+            "num",
+            included
+              ? "included"
+              : fmtUsd(provider.last30Days ? provider.last30Days.costUsd : 0),
+          );
+          if (included) monthCost.title = "Covered by the plan; see the matching detail section above.";
+          const share = make("td", "num", `${nf1.format(provider.sharePct || 0)}%`);
+          const last = make("td", null, lastLabel(provider.lastAt));
+          tr.append(name, todayReq, weekReq, monthTok, monthCost, share, last);
+          providerBody.append(tr);
+        }
+
+        const modelBody = $("allModelTable").querySelector("tbody");
+        modelBody.textContent = "";
+        for (const model of (all.models || []).slice(0, 10)) {
+          const tr = document.createElement("tr");
+          const name = make("td", "strong", prettyModel(model.model));
+          const provider = make("td");
+          provider.append(
+            make("div", null, model.providerName),
+            (() => {
+              const plan = make("div", "event-meta", model.plan);
+              plan.style.marginTop = "1px";
+              return plan;
+            })(),
+          );
+          const req = make("td", "num", fmtInt(model.last30Days ? model.last30Days.requests : 0));
+          const tok = make(
+            "td",
+            "num",
+            fmtCompact(model.last30Days && model.last30Days.tokens ? model.last30Days.tokens.total : 0),
+          );
+          const cost = make(
+            "td",
+            "num",
+            model.kind === "go" || model.kind === "free"
+              ? "included"
+              : fmtUsd(model.last30Days ? model.last30Days.costUsd : 0),
+          );
+          const last = make("td", null, lastLabel(model.lastAt));
+          tr.append(name, provider, req, tok, cost, last);
+          modelBody.append(tr);
+        }
+
+        const foot = $("allFoot");
+        foot.textContent = "";
+        foot.append(
+          `Every assistant row in the local database, last ${all.days ? all.days.length : 0} UTC days. ` +
+            "Cost is OpenCode's reported local cost; subscription plans (Go, Go Plus/Teams, OAuth subscriptions) can report $0. " +
+            "External providers have no shared quota API, so only local usage is shown.",
+        );
+        if (all.costNote) {
+          foot.append(" " + all.costNote);
+        }
+      }
+
+      function tickGo() {
+        const go = state.data && state.data.go;
+        if (!go || !go.meters) return;
+        for (const node of document.querySelectorAll("[data-go-reset]")) {
+          const meter = go.meters[node.dataset.goReset];
+          if (!meter || !meter.resetsAt) {
+            node.textContent = "reset unknown";
+            continue;
+          }
+          const remaining = Date.parse(meter.resetsAt) - Date.now();
+          node.textContent = remaining > 0 ? `resets in ${fmtDuration(remaining)}` : "resetting…";
+        }
+      }
+
+      function renderStats(data) {
+        const win = data.window || {};
+        const requests = Number.isFinite(win.usedRequests) ? win.usedRequests : data.today.requests;
+        const dayRequests = data.today.requests;
+        const progress = Math.max(0, Math.min(1, Number(data.meta.windowProgress) || 0));
+        const limited = data.meta.status === "limited";
+        const last = win.lastRefusal && win.lastRefusal.requests > 0 ? win.lastRefusal : null;
+        const boundary = last ? last.requests : null;
+        const headroom = Number.isFinite(win.headroomRequests) ? win.headroomRequests : null;
+
+        setText("reqToday", fmtInt(requests));
+        const srcNote = win.usedSource === "server" ? "server-observed window" : "local window";
+        setText(
+          "reqSub",
+          requests > 0
+            ? `${srcNote} · ${fmtInt(dayRequests)} today (UTC) · last at ${fmtClock(data.today.lastSuccessAt)}`
+            : "No free requests in the current window",
+        );
+
+        // The bar compares observed usage with the largest window ever seen at
+        // a refusal. That boundary is a historical observation, not the
+        // server's cap (which is not published), so the ratio can pass 100%.
+        const ratio = boundary ? Math.min(1, requests / boundary) : progress;
+        $("reqMeter").style.width = (ratio * 100).toFixed(1) + "%";
+        $("reqMeter").className = "meter-fill" + (limited ? " bad" : ratio >= 0.9 ? " warn" : "");
+        $("reqMeterWrap").setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+        $("reqMeterWrap").setAttribute(
+          "aria-valuetext",
+          boundary
+            ? `${fmtInt(requests)} of ${fmtInt(boundary)} observed at the last refusal`
+            : `${fmtInt(requests)} requests; no refusal boundary observed`,
+        );
+        if (boundary) {
+          setText(
+            "reqFoot",
+            headroom > 0
+              ? `${fmtInt(headroom)} more requests would match the last refused window (${fmtInt(
+                  boundary,
+                )} observed) · ${Math.round(progress * 100)}% of the 24h window elapsed`
+              : `At or past the last refused window (${fmtInt(
+                  boundary,
+                )} observed) · ${Math.round(progress * 100)}% of the 24h window elapsed`,
+          );
+        } else {
+          setText(
+            "reqFoot",
+            `${Math.round(progress * 100)}% of the 24h window elapsed · no refusal observed yet, so no boundary to compare`,
+          );
+        }
+
+        const tokens = data.today.tokens;
+        setText("tokenToday", fmtCompact(tokens.total));
+        $("tokenToday").title = fmtInt(tokens.total) + " tokens";
+        setText(
+          "tokenSub",
+          `${fmtCompact(tokens.input)} in · ${fmtCompact(tokens.output + tokens.reasoning)} out · ${fmtCompact(
+            tokens.cacheRead,
+          )} cache`,
+        );
+        const windowTokens = Number.isFinite(win.usedTokens) ? win.usedTokens : tokens.total;
+        setText(
+          "tokenFoot",
+          `${fmtCompact(windowTokens)} in the current window · cache reads ${fmtPct(
+            tokens.cacheRead,
+            tokens.total,
+          )}% of today's tokens`,
+        );
+
+        setText("valueToday", fmtUsd(data.today.listValue));
+        setText(
+          "valueSub",
+          data.today.pricedRequests > 0
+            ? `${fmtInt(data.today.pricedRequests)} priced requests at list rates`
+            : "No priced models today",
+        );
+        setText(
+          "valueFoot",
+          data.today.unpricedRequests > 0
+            ? `${fmtInt(data.today.unpricedRequests)} requests used models without a known price`
+            : "Actual cost: $0 on the free tier",
+        );
+
+        const status = data.meta.status;
+        setText("ceilingToday", headroom != null ? fmtInt(headroom) : "–");
+        $("ceilingToday").style.color =
+          headroom === 0 ? "var(--bad)" : last && requests / Math.max(1, boundary) >= 0.9 ? "var(--warn)" : "";
+        setText(
+          "ceilingSub",
+          last
+            ? `vs ${fmtInt(boundary)} observed at the last refusal`
+            : "no refusal observed yet",
+        );
+        const lastEvent = data.limit.lastEvent;
+        setText(
+          "ceilingFoot",
+          lastEvent
+            ? `Last refusal ${fmtDateTime(lastEvent.at)} · ${
+                limited ? "limit still active" : status === "limit-banner" ? "requests working again" : "no active block"
+              }`
+            : "No refusal in the last 48 hours",
+        );
+
+        const totalEvents = data.days.reduce((acc, day) => acc + day.limitEvents, 0);
+        setText(
+          "historySub",
+          `Last ${data.days.length} UTC days · ${fmtInt(
+            data.days.reduce((acc, day) => acc + day.requests, 0),
+          )} requests · ${fmtCompact(data.days.reduce((acc, day) => acc + day.tokens.total, 0))} tokens · ${fmtInt(
+            totalEvents,
+          )} refusals`,
+        );
+      }
+
+      function renderTokens(data) {
+        const totals = data.totals || {};
+        const win = data.window || {};
+        const today = data.today || {};
+        const todayTokens = today.tokens || {};
+        const windowTokens = Number.isFinite(win.usedTokens) ? win.usedTokens : todayTokens.total || 0;
+        const windowRequests = Number.isFinite(win.usedRequests) ? win.usedRequests : today.requests || 0;
+
+        setText("tokenWindow", fmtCompact(windowTokens));
+        $("tokenWindow").title = fmtInt(windowTokens) + " tokens";
+        setText(
+          "tokenWindowSub",
+          `${fmtInt(windowRequests)} requests · ${
+            win.usedSource === "server" ? "account-wide count" : "local count"
+          }`,
+        );
+        const windowBreak = win.usedTokensByType;
+        setText(
+          "tokenWindowFoot",
+          windowBreak
+            ? `${fmtCompact(windowBreak.input)} input · ${fmtCompact(
+                windowBreak.output + windowBreak.reasoning,
+              )} output · ${fmtCompact(windowBreak.cacheRead)} cache read`
+            : "The server log stores only a total per request; the mix below uses local daily history.",
+        );
+
+        const scopes = [
+          {
+            key: "last7Days",
+            valueId: "token7d",
+            subId: "token7dSub",
+            footId: "token7dFoot",
+            sub: (t) => `${fmtInt(t.requests)} requests · ${fmtInt(t.activeDays)} active days`,
+            foot: (t) => `${fmtCompact(t.avgTokensPerDay)} avg/day · ${fmtCompact(t.tokens.cacheRead)} cache read`,
+          },
+          {
+            key: "last30Days",
+            valueId: "token30d",
+            subId: "token30dSub",
+            footId: "token30dFoot",
+            sub: (t) => `${fmtInt(t.requests)} requests · ${fmtInt(t.activeDays)} active days`,
+            foot: (t) =>
+              `${fmtCompact(t.avgTokensPerDay)} avg/day · ${fmtCompact(t.tokens.cacheRead)} cache read`,
+          },
+          {
+            key: "tracked",
+            valueId: "tokenTracked",
+            subId: "tokenTrackedSub",
+            footId: "tokenTrackedFoot",
+            sub: (t) => `${fmtInt(t.days)} days tracked · ${fmtInt(t.requests)} requests`,
+            foot: (t) => `${fmtCompact(t.avgTokensPerDay)} avg/day · ${fmtUsd(t.listValue)} list value`,
+          },
+        ];
+
+        for (const scope of scopes) {
+          const t = totals[scope.key] || {};
+          const tokens = t.tokens || {};
+          const total = Number(tokens.total) || 0;
+          setText(scope.valueId, fmtCompact(total));
+          $(scope.valueId).title = fmtInt(total) + " tokens";
+          setText(scope.subId, scope.sub(t));
+          setText(scope.footId, scope.foot(t));
+        }
+
+        const agg = totals[state.tokenScope] || {};
+        const tokens = agg.tokens || {};
+        const total = Number(tokens.total) || 0;
+        const rangeLabel =
+          state.tokenScope === "last7Days"
+            ? "last 7 days"
+            : state.tokenScope === "last30Days"
+              ? "last 30 days"
+              : "tracked history";
+
+        const bar = $("tokenMixBar");
+        bar.textContent = "";
+        for (const part of TOKEN_PARTS) {
+          const value = Number(tokens[part.key]) || 0;
+          if (value <= 0 || total <= 0) continue;
+          const segment = document.createElement("span");
+          segment.style.width = ((value / total) * 100).toFixed(2) + "%";
+          segment.style.background = part.color;
+          segment.title = `${part.label}: ${fmtInt(value)} (${fmtShare(value, total)})`;
+          bar.appendChild(segment);
+        }
+
+        const list = $("tokenMixList");
+        list.textContent = "";
+        for (const part of TOKEN_PARTS) {
+          const value = Number(tokens[part.key]) || 0;
+          const row = document.createElement("div");
+          row.className = "mixrow";
+
+          const swatch = document.createElement("span");
+          swatch.className = "sw";
+          swatch.style.background = part.color;
+
+          const name = document.createElement("span");
+          name.className = "name";
+          name.textContent = part.label;
+
+          const val = document.createElement("span");
+          val.className = "val";
+          val.textContent = fmtCompact(value);
+          val.title = fmtInt(value) + " tokens";
+
+          const pct = document.createElement("span");
+          pct.className = "pct";
+          pct.textContent = fmtShare(value, total);
+
+          row.append(swatch, name, val, pct);
+          list.appendChild(row);
+        }
+
+        const range =
+          agg.firstDay && agg.lastDay
+            ? ` · ${fmtDayLabel(agg.firstDay)} → ${fmtDayLabel(agg.lastDay)}`
+            : "";
+        setText(
+          "tokenMixSub",
+          total > 0
+            ? `${fmtInt(agg.requests)} requests · ${fmtInt(agg.activeDays)} active days · ${rangeLabel}${range}`
+            : `No local free-model token data in the ${rangeLabel}.`,
+        );
+        setText(
+          "tokenMixFoot",
+          total > 0
+            ? `Cache reads ${fmtShare(tokens.cacheRead, total)} · output + reasoning ${fmtShare(
+                (Number(tokens.output) || 0) + (Number(tokens.reasoning) || 0),
+                total,
+              )} · cache writes ${fmtShare(tokens.cacheWrite, total)} · avg ${fmtCompact(
+                total / Math.max(1, agg.requests),
+              )}/request`
+            : "",
+        );
+
+        const rows = (data.days || []).slice(-state.tokenHistoryDays).reverse();
+        const tbody = $("tokenTable").querySelector("tbody");
+        tbody.textContent = "";
+        $("tokenTable").classList.toggle("hidden", rows.length === 0);
+        $("tokenTableEmpty").classList.toggle("hidden", rows.length > 0);
+
+        let sumRequests = 0;
+        let sumTokens = 0;
+        let sumCacheRead = 0;
+        for (const day of rows) {
+          sumRequests += day.requests;
+          sumTokens += day.tokens.total;
+          sumCacheRead += day.tokens.cacheRead;
+
+          const tr = document.createElement("tr");
+          const dayCell = document.createElement("td");
+          dayCell.className = "strong";
+          dayCell.textContent = fmtDayLabel(day.day);
+          if (day.hit) {
+            const badge = document.createElement("span");
+            badge.className = "badge hit";
+            badge.textContent = "hit";
+            badge.style.marginLeft = "7px";
+            badge.title = `Refused after ${fmtInt(day.hit.requests)} observed requests`;
+            dayCell.appendChild(badge);
+          }
+
+          const cells = [
+            [day.requests, fmtInt],
+            [day.tokens.input, fmtCompact],
+            [day.tokens.output, fmtCompact],
+            [day.tokens.reasoning, fmtCompact],
+            [day.tokens.cacheRead, fmtCompact],
+            [day.tokens.cacheWrite, fmtCompact],
+            [day.tokens.total, fmtCompact],
+          ].map(([value, format], index) => {
+            const td = document.createElement("td");
+            td.className = "num" + (index === 0 || index === 6 ? " strong" : "");
+            td.textContent = format(value);
+            td.title = fmtInt(value) + (index === 0 ? " requests" : " tokens");
+            return td;
+          });
+
+          tr.append(dayCell, ...cells);
+          tbody.appendChild(tr);
+        }
+
+        setText(
+          "tokenHistorySub",
+          rows.length > 0
+            ? `Last ${rows.length} UTC days · ${fmtInt(sumRequests)} requests · ${fmtCompact(
+                sumTokens,
+              )} tokens · cache reads ${fmtPct(sumCacheRead, sumTokens)}%`
+            : `No local token data in the last ${state.tokenHistoryDays} days.`,
+        );
+      }
+
+      function renderEstimate(data) {
+        const wrap = $("estimateMeters");
+        wrap.textContent = "";
+        const limited = data.meta.status === "limited";
+        const units = [
+          { key: "requests", label: "Requests", format: fmtInt },
+          { key: "tokens", label: "Tokens", format: fmtCompact },
+          { key: "listValue", label: "List value", format: fmtUsd },
+        ];
+
+        for (const unit of units) {
+          const est = data.limit.estimates[unit.key];
+          const used = Number(est.used) || 0;
+          const observedMax = Number(est.max) || 0;
+          const observed = est.source === "history";
+          const scale = Math.max(observedMax, used, 1);
+
+          const row = document.createElement("div");
+          row.className = "erow";
+
+          const head = document.createElement("div");
+          head.className = "erow-head";
+          const k = document.createElement("span");
+          k.className = "k";
+          k.textContent = unit.label;
+          const v = document.createElement("span");
+          v.className = "v";
+          v.textContent = `${unit.format(used)} this window`;
+          head.append(k, v);
+
+          const bar = document.createElement("div");
+          bar.className = "ebar";
+          bar.style.background = "rgba(255,255,255,0.055)";
+          const fill = document.createElement("div");
+          fill.className = "efill" + (limited && used >= scale ? " bad" : "");
+          fill.style.width = Math.min(100, (used / scale) * 100).toFixed(1) + "%";
+          bar.appendChild(fill);
+
+          // Tick marks the largest value seen before a refusal — an
+          // observation, not a published limit.
+          if (observed && observedMax > 0) {
+            const tick = document.createElement("div");
+            tick.className = "etick";
+            tick.style.left = Math.min(100, (observedMax / scale) * 100).toFixed(1) + "%";
+            tick.title = "Largest observed refusal boundary: " + unit.format(observedMax);
+            bar.appendChild(tick);
+          }
+
+          const foot = document.createElement("div");
+          foot.className = "erow-foot";
+          foot.textContent = observed
+            ? `window usage at past refusals: ${unit.format(est.min)}–${unit.format(
+                est.max,
+              )} · median ${unit.format(est.likely)} · n=${est.n}`
+            : `not enough refusals to observe a boundary · n=${est.n}`;
+
+          row.append(head, bar, foot);
+          wrap.appendChild(row);
+        }
+
+        const win = data.window || {};
+        const reset = data.meta.resetAt ? new Date(data.meta.resetAt) : null;
+        const resetSource = data.meta.resetSource;
+        if (reset) {
+          const utc = reset.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+          const local = reset.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const when = local === utc ? `${utc} UTC` : `${utc} UTC · ${local} local`;
+          const day =
+            reset.toDateString() !== new Date().toDateString()
+              ? " " + reset.toLocaleDateString([], { month: "short", day: "numeric" })
+              : "";
+          setText(
+            "resetAtLabel",
+            (resetSource === "server" ? "OpenCode-confirmed · " : "estimated latest · ") + when + day,
+          );
+        } else {
+          setText("resetAtLabel", win.anchorAt ? "unknown" : "no active window yet");
+        }
+
+        // The server has not confirmed this window, so the reset is a range:
+        // the last boundary + 24h is the earliest it can be, and the first
+        // local success + 24h is the latest. Console rows are excluded because
+        // they can come from another network.
+        const rangeEl = $("resetRange");
+        rangeEl.textContent = "";
+        rangeEl.removeAttribute("title");
+        const resetRange = win.resetRange;
+        if (resetSource === "server") {
+          rangeEl.textContent = "Exact — from the server’s 429 retryAfterMs";
+        } else if (resetRange && resetRange.earliest && resetRange.latest) {
+          const clock = (date) =>
+            date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+          const earliest = new Date(resetRange.earliest);
+          const latest = new Date(resetRange.latest);
+          const sameDay = earliest.toISOString().slice(0, 10) === latest.toISOString().slice(0, 10);
+          const earliestDay = earliest.toLocaleDateString([], {
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+          const latestDay = latest.toLocaleDateString([], {
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+          rangeEl.textContent = `Possible reset ${earliestDay} ${clock(earliest)} – ${
+            sameDay ? clock(latest) : `${latestDay} ${clock(latest)}`
+          } UTC`;
+          rangeEl.title =
+            "Earliest: the last server boundary + 24h. Latest: the first free request recorded in this machine's local database + 24h. Another device on the same network can open the window earlier.";
+        } else {
+          rangeEl.textContent = "No server boundary yet — reset range unavailable";
+        }
+
+        const start = win.boundaryAt ? new Date(win.boundaryAt) : win.anchorAt ? new Date(win.anchorAt) : null;
+        const clock = (date) =>
+          date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+        if (start) {
+          const dayName = (date) =>
+            date.toLocaleDateString([], { month: "short", day: "numeric", timeZone: "UTC" });
+          const stamp = (date) =>
+            date.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10)
+              ? clock(date)
+              : `${dayName(date)} ${clock(date)}`;
+
+          const startLabel =
+            win.boundaryAt && win.anchorAt && win.boundaryAt !== win.anchorAt
+              ? `${stamp(new Date(win.boundaryAt))}–${clock(new Date(win.anchorAt))}`
+              : clock(start);
+
+          // With no server-confirmed reset, the end is a range too: the
+          // boundary + 24h at the earliest, the first local request + 24h at
+          // the latest. Showing only the latest as "the" end overstates it.
+          const range = win.resetRange;
+          let endLabel;
+          if (resetSource === "server" && reset) {
+            endLabel = stamp(reset);
+          } else if (range && range.earliest && range.latest) {
+            const earliest = new Date(range.earliest);
+            const latest = new Date(range.latest);
+            const sameDay = earliest.toISOString().slice(0, 10) === latest.toISOString().slice(0, 10);
+            endLabel = `${dayName(earliest)} ${clock(earliest)}–${
+              sameDay ? "" : `${dayName(latest)} `
+            }${clock(latest)}`;
+          } else if (reset) {
+            endLabel = stamp(reset);
+          } else {
+            endLabel = "unknown";
+          }
+
+          setText("windowRange", `start ${startLabel} → reset ${endLabel} (UTC)`);
+          $("windowRange").title =
+            win.boundaryAt && win.anchorAt && win.boundaryAt !== win.anchorAt
+              ? "Window opened somewhere between the last server boundary and the first free request in the local database; the reset is 24h after that unknown instant."
+              : "Window start and reset, both in UTC.";
+        } else {
+          setText("windowRange", "24h window");
+          $("windowRange").removeAttribute("title");
+        }
+
+        // Pace must use the same start as the window progress. Using the
+        // first local request when a server boundary already exists inflates
+        // the rate by the idle gap at the start of the window.
+        const paceStartAt = win.boundaryAt || win.anchorAt || data.meta.dayStart;
+        const paceStart = Date.parse(paceStartAt);
+        const elapsedHours = Math.max((Date.now() - paceStart) / 3_600_000, 0);
+        const winRequests = Number.isFinite(win.usedRequests) ? win.usedRequests : data.today.requests;
+        const pace = $("paceLabel");
+        pace.textContent = "";
+        pace.classList.remove("over");
+        pace.removeAttribute("title");
+
+        if (winRequests === 0) {
+          pace.textContent =
+            "No free requests in the current window yet. The next reset cannot be earlier than 24h after the first request observed in it.";
+        } else if (elapsedHours < 1) {
+          pace.textContent =
+            "Window started less than an hour ago — pace and the 24h estimate appear once there is an hour of data.";
+        } else {
+          const perHour = winRequests / elapsedHours;
+          const projected = Math.round(perHour * 24);
+          const strong = document.createElement("strong");
+          strong.textContent =
+            resetSource === "server" ? `${nf1.format(perHour)} req/h` : `at least ${nf1.format(perHour)} req/h`;
+          pace.append("Pace this window: ", strong, ` · ~${fmtInt(projected)} per 24h at this rate`);
+          if (Number.isFinite(win.headroomRequests)) {
+            pace.append(` · ${fmtInt(win.headroomRequests)} requests of observed headroom`);
+          }
+          pace.title =
+            resetSource === "server"
+              ? `Averaged from the server-confirmed boundary at ${fmtClock(paceStartAt)} UTC.`
+              : `Averaged from the last server boundary at ${fmtClock(
+                  paceStartAt,
+                )} UTC. The window really opened between that boundary and the first request seen here, so the elapsed time is an upper bound and the pace is a lower bound.`;
+        }
+      }
+
+      function renderHistory(data) {
+        const metric = state.metric;
+        const items = data.days.map((day) => {
+          const value =
+            metric === "requests" ? day.requests : metric === "tokens" ? day.tokens.total : day.listValue;
+          const title = `${fmtDayLabel(day.day)} · ${fmtInt(day.requests)} free requests · ${fmtCompact(
+            day.tokens.total,
+          )} tokens · ${fmtUsd(day.listValue)}${day.hit ? ` · refused after ${fmtInt(day.hit.requests)} requests` : ""}`;
+          return { label: fmtDayLabel(day.day), value, hit: Boolean(day.hit), title };
+        });
+
+        drawBars($("historyChart"), items, {
+          height: 238,
+          formatAxis: metric === "listValue" ? fmtUsd : fmtCompact,
+          ariaLabel: "Daily free usage",
+        });
+        setText(
+          "legendMetric",
+          metric === "requests" ? "free requests" : metric === "tokens" ? "tokens" : "list value",
+        );
+      }
+
+      function renderHourly(data) {
+        const items = data.hourly.map((hour) => ({
+          label: String(hour.hour).padStart(2, "0"),
+          value: hour.requests,
+          hit: hour.limitEvents > 0,
+          title: `${String(hour.hour).padStart(2, "0")}:00 UTC · ${fmtInt(hour.requests)} requests · ${fmtCompact(
+            hour.tokens,
+          )} tokens${hour.limitEvents ? ` · ${hour.limitEvents} refusal(s)` : ""}`,
+        }));
+        drawBars($("hourlyChart"), items, {
+          height: 196,
+          formatAxis: fmtCompact,
+          ariaLabel: "Today's free requests by UTC hour",
+        });
+        const peak = data.hourly.reduce((a, b) => (b.requests > a.requests ? b : a), data.hourly[0]);
+        const serverSeen = data.meta.serverSeen ?? data.meta.accountBucket;
+        const scopeNote = serverSeen
+          ? " · local DB only; Console sync below covers other devices"
+          : " · local DB only; other devices on this network are invisible here";
+        setText(
+          "hourlySub",
+          peak && peak.requests > 0
+            ? `Busiest hour: ${String(peak.hour).padStart(2, "0")}:00 UTC with ${fmtInt(peak.requests)} requests${scopeNote}`
+            : `UTC hours · no requests today${scopeNote}`,
+        );
+      }
+
+      function renderHits(data) {
+        const tbody = $("hitTable").querySelector("tbody");
+        tbody.textContent = "";
+        const allHits = data.limit.hitPoints || [];
+        const hits = (state.hitLimit === "all" ? allHits : allHits.slice(-5)).slice().reverse();
+        $("hitTable").classList.toggle("hidden", hits.length === 0);
+        $("hitEmpty").classList.toggle("hidden", hits.length > 0);
+
+        if (hits.length > 0) {
+          const counts = hits.map((h) => h.requests).filter((v) => v > 0);
+          const scope = hits.length === allHits.length ? `all ${hits.length}` : `last ${hits.length}`;
+          setText(
+            "hitSub",
+            `Requests this machine observed in each announced 24h window before a refusal, ${scope} refusals: ${fmtInt(
+              Math.min(...counts),
+            )}–${fmtInt(
+              Math.max(...counts),
+            )}. The window is counted per network, other clients on it are invisible here, and the cap is not published, so the spread is expected.`,
+          );
+        }
+
+        for (const hit of hits) {
+          const tr = document.createElement("tr");
+          const isToday = hit.day === new Date().toISOString().slice(0, 10);
+
+          const day = document.createElement("td");
+          day.className = "strong";
+          day.textContent = fmtDayLabel(hit.day);
+          if (isToday) {
+            const badge = document.createElement("span");
+            badge.className = "badge hit";
+            badge.textContent = "today";
+            badge.style.marginLeft = "7px";
+            day.appendChild(badge);
+          }
+
+          const at = document.createElement("td");
+          at.textContent = fmtClock(hit.at);
+
+          const req = document.createElement("td");
+          req.className = "num strong";
+          req.textContent = fmtInt(hit.requests);
+
+          const tok = document.createElement("td");
+          tok.className = "num";
+          tok.textContent = fmtCompact(hit.tokens);
+
+          const val = document.createElement("td");
+          val.className = "num";
+          val.textContent = fmtUsd(hit.listValue);
+
+          // Exact Console rollup for that UTC day (all devices/apps). It can
+          // be higher than this machine's window count, and it lags the
+          // newest requests until Console builds the day's rollup.
+          const server = document.createElement("td");
+          server.className = "num";
+          server.textContent = Number.isFinite(hit.serverDayRequests) ? fmtInt(hit.serverDayRequests) : "–";
+          server.title = Number.isFinite(hit.serverDayRequests)
+            ? "Console daily rollup: requests on that UTC day across the whole account"
+            : "No Console rollup for this day";
+
+          const reset = document.createElement("td");
+          reset.textContent = hit.resetAt ? fmtDateTime(hit.resetAt) : "n/a";
+
+          const src = document.createElement("td");
+          src.textContent = hit.source;
+
+          tr.append(day, at, req, tok, val, server, reset, src);
+          tbody.appendChild(tr);
+        }
+      }
+
+      function renderEvents(data) {
+        const list = $("eventList");
+        list.textContent = "";
+        const events = data.limit.recentEvents;
+        $("eventEmpty").classList.toggle("hidden", events.length > 0);
+        list.classList.toggle("hidden", events.length === 0);
+
+        for (const event of events.slice(0, 8)) {
+          const item = document.createElement("div");
+          item.className = "event";
+
+          const dot = document.createElement("span");
+          dot.className = "event-dot" + (event.requestsAt === 0 ? " warn" : "");
+
+          const main = document.createElement("div");
+          main.className = "event-main";
+
+          const top = document.createElement("div");
+          top.className = "event-top";
+          const title = document.createElement("span");
+          title.className = "event-title";
+          const prefix = event.count > 1 ? `Refused ${event.count}×` : "Refused";
+          title.textContent =
+            event.requestsAt > 0
+              ? `${prefix} after ${fmtInt(event.requestsAt)} free requests`
+              : event.requestsAt === 0
+                ? `${prefix} · no local count`
+                : `${prefix} · server-side record`;
+          const time = document.createElement("span");
+          time.className = "event-time";
+          time.textContent =
+            event.count > 1
+              ? `${fmtDateTime(event.at)} – ${fmtClock(event.lastAt)}`
+              : fmtDateTime(event.at);
+          top.append(title, time);
+
+          const meta = document.createElement("div");
+          meta.className = "event-meta";
+          if (event.sessionTitle) {
+            meta.append("Session: ");
+            const s = document.createElement("strong");
+            s.textContent = event.sessionTitle;
+            meta.appendChild(s);
+            meta.append(" · ");
+          }
+          meta.append(
+            `${fmtCompact(event.tokensAt)} tokens · ${fmtUsd(event.listValueAt)} · reset ${fmtClock(event.resetAt)}`,
+          );
+
+          main.append(top, meta);
+          item.append(dot, main);
+          list.appendChild(item);
+        }
+      }
+
+      function renderSessions(data) {
+        const tbody = $("sessionTable").querySelector("tbody");
+        tbody.textContent = "";
+        const sessions = data.sessions;
+        $("sessionEmpty").classList.toggle("hidden", sessions.length > 0);
+        $("sessionTable").classList.toggle("hidden", sessions.length === 0);
+
+        for (const session of sessions) {
+          const tr = document.createElement("tr");
+
+          const name = document.createElement("td");
+          const title = document.createElement("span");
+          title.className = "row-title";
+          title.textContent = session.title || "Untitled session";
+          title.title = session.title || "Untitled session";
+          name.appendChild(title);
+
+          const req = document.createElement("td");
+          req.className = "num strong";
+          req.textContent = fmtInt(session.requests);
+
+          const tok = document.createElement("td");
+          tok.className = "num";
+          tok.textContent = fmtCompact(session.tokens.total);
+          tok.title = tokenTitle(session.tokens);
+
+          const val = document.createElement("td");
+          val.className = "num";
+          val.textContent = fmtUsd(session.listValue);
+
+          const last = document.createElement("td");
+          last.textContent = fmtClock(session.lastAt);
+
+          tr.append(name, req, tok, val, last);
+          tbody.appendChild(tr);
+        }
+      }
+
+      function renderModels(data) {
+        const tbody = $("modelTable").querySelector("tbody");
+        tbody.textContent = "";
+        const models = data.models.slice(0, 10);
+        $("modelEmpty").classList.toggle("hidden", models.length > 0);
+        $("modelTable").classList.toggle("hidden", models.length === 0);
+
+        for (const model of models) {
+          const tr = document.createElement("tr");
+
+          const name = document.createElement("td");
+          name.className = "strong";
+          name.textContent = model.name;
+          name.title = model.id;
+
+          const req = document.createElement("td");
+          req.className = "num strong";
+          req.textContent = fmtInt(model.requests);
+
+          const tok = document.createElement("td");
+          tok.className = "num";
+          tok.textContent = fmtCompact(model.tokens.total);
+          tok.title = tokenTitle(model.tokens);
+
+          const val = document.createElement("td");
+          val.className = "num";
+          val.textContent = model.priced ? fmtUsd(model.listValue) : "–";
+          if (!model.priced) val.title = "No list price configured for this model";
+
+          tr.append(name, req, tok, val);
+          tbody.appendChild(tr);
+        }
+
+        const unpriced = data.models.filter((m) => !m.priced).reduce((acc, m) => acc + m.requests, 0);
+        setText(
+          "modelSub",
+          unpriced > 0
+            ? `${fmtInt(unpriced)} requests used models without a known list price (shown as –).`
+            : "All used free models have a configured list price.",
+        );
+      }
+
+      function renderFooter(data) {
+        setText("dbPath", data.meta.dbPath);
+        setText("logPath", data.meta.logPath);
+        setText(
+          "windowLabel",
+          `Window ${data.meta.windowDays} days · DB ${(data.meta.dbSize / 1_000_000).toFixed(1)} MB · refresh ${
+            Math.round(data.meta.refreshMs / 1000)
+          }s`,
+        );
+        setText("tzLabel", data.meta.timezone);
+      }
+
+      function renderServer(data) {
+        const server = data.server || { configured: false };
+        const configured = Boolean(server.configured);
+        $("consoleSetup").classList.toggle("hidden", configured);
+        $("consolePill").className = "pill";
+        const foot = $("consoleFoot");
+        foot.textContent = "";
+
+        if (!configured) {
+          $("consolePill").classList.add("warn");
+          setText("consoleStatus", "Not configured");
+          $("serverTable").classList.add("hidden");
+          $("serverEmpty").classList.remove("hidden");
+          $("exportTotals").classList.add("hidden");
+          $("exportTotals").textContent = "";
+          return;
+        }
+
+        const days = server.days || [];
+        if (server.error) {
+          $("consolePill").classList.add("bad");
+          setText("consoleStatus", "Sync error");
+        } else if (server.syncing) {
+          $("consolePill").classList.add("warn");
+          setText("consoleStatus", "Syncing…");
+        } else {
+          $("consolePill").classList.add("good");
+          setText("consoleStatus", server.lastSyncAt ? "Synced" : "Never synced");
+        }
+
+        const localByDay = new Map(data.days.map((d) => [d.day, d]));
+        const rows = [...days].reverse(); // newest first
+        const tbody = $("serverTable").querySelector("tbody");
+        tbody.textContent = "";
+        $("serverTable").classList.toggle("hidden", rows.length === 0);
+        $("serverEmpty").classList.toggle("hidden", rows.length > 0);
+
+        for (const row of rows) {
+          const local = localByDay.get(row.day);
+          const localRequests = local ? local.requests : 0;
+          const diff = row.requests - localRequests;
+          const tr = document.createElement("tr");
+
+          const day = document.createElement("td");
+          day.className = "strong";
+          day.textContent = fmtDayLabel(row.day);
+
+          const req = document.createElement("td");
+          req.className = "num strong";
+          req.textContent = fmtInt(row.requests);
+
+          const loc = document.createElement("td");
+          loc.className = "num";
+          loc.textContent = fmtInt(localRequests);
+
+          const other_ = document.createElement("td");
+          other_.className = "num";
+          if (diff > 0) {
+            other_.textContent = "+" + fmtInt(diff);
+            other_.title = "Server-attributed requests this machine did not record (other devices or a later local log).";
+          } else if (diff < 0) {
+            other_.textContent = "—";
+            other_.title =
+              "The Console log has fewer requests than the local database. It only covers requests attributed to your Console account and may start later.";
+          } else {
+            other_.textContent = "0";
+          }
+
+          const tok = document.createElement("td");
+          tok.className = "num";
+          tok.textContent = fmtCompact(row.tokens);
+
+          const failed = document.createElement("td");
+          failed.className = "num";
+          failed.textContent = fmtInt(row.failed);
+
+          tr.append(day, req, loc, other_, tok, failed);
+          $("serverTable").querySelector("tbody").appendChild(tr);
+        }
+
+        if (server.lastSyncAt) {
+          foot.append("Last sync ");
+          const strong = document.createElement("strong");
+          strong.textContent = fmtDateTime(server.lastSyncAt);
+          foot.appendChild(strong);
+        }
+        const serverSeen = data.meta.serverSeen ?? data.meta.accountBucket;
+        if (serverSeen) {
+          foot.append(" · ");
+          const bucket = document.createElement("span");
+          bucket.style.color = "var(--good)";
+          bucket.textContent =
+            "account attribution active — the server log includes every client signed in to this account, which may be on a different network/IP than this machine";
+          foot.appendChild(bucket);
+        }
+        if (server.error) {
+          foot.append(" · ");
+          const err = document.createElement("span");
+          err.style.color = "var(--bad)";
+          err.textContent = server.error;
+          foot.appendChild(err);
+        }
+        foot.append(` · ${fmtInt(server.lastItemCount || 0)} records in the latest sync`);
+
+        // Account-wide Console export totals. This is the only server source
+        // with a multi-day request and token rollup, but it is not the free
+        // bucket: anonymous, network-keyed usage is not attributed here.
+        const exportWrap = $("exportTotals");
+        exportWrap.textContent = "";
+        const exportTotals = server.exportTotals || {};
+        const hasExport = exportTotals.all && exportTotals.all.requests > 0;
+        exportWrap.classList.toggle("hidden", !hasExport);
+        if (hasExport) {
+          const specs = [
+            ["last7Days", "7d", 7],
+            ["last30Days", "30d", 30],
+            ["all", "all", null],
+          ];
+          for (const [key, label, span] of specs) {
+            const row = exportTotals[key];
+            if (!row) continue;
+            const box = document.createElement("div");
+            box.className = "export-total";
+            const k = document.createElement("div");
+            k.className = "k";
+            // The export only contains completed UTC days, so a 7d card can
+            // legitimately cover fewer days. Say so instead of implying a
+            // full week.
+            k.textContent =
+              span == null
+                ? `Console export · ${label}`
+                : row.days < span
+                  ? `Console export · ${label} · ${fmtInt(row.days)} built`
+                  : `Console export · ${label}`;
+            const v = document.createElement("div");
+            v.className = "v";
+            v.textContent = `${fmtInt(row.requests)} req`;
+            const s = document.createElement("div");
+            s.className = "s";
+            s.textContent = `${fmtCompact(row.tokens)} tok · ${fmtInt(row.days)} ${
+              row.days === 1 ? "day" : "days"
+            }`;
+            s.title = `${fmtInt(row.inputTokens)} input · ${fmtInt(row.outputTokens)} output · ${fmtInt(
+              row.cacheReadTokens,
+            )} cache read · account-wide, completed UTC days only`;
+            box.append(k, v, s);
+            exportWrap.appendChild(box);
+          }
+        }
+      }
+
+      async function syncConsole(btn) {
+        btn.classList.add("busy");
+        try {
+          const res = await fetch("/api/console/sync", { method: "POST" });
+          const json = await res.json();
+          if (json && json.summary) {
+            state.data = state.data
+              ? { ...state.data, server: { ...json.summary, configured: true } }
+              : state.data;
+            if (state.data) renderServer(state.data);
+          }
+        } catch {
+          /* surfaced on the next render */
+        } finally {
+          btn.classList.remove("busy");
+        }
+      }
+
+      function render(data) {
+        state.data = data;
+        state.lastFetch = Date.now();
+        if (data.error) {
+          showError(data.error.message || "Unknown error", data.error.path);
+          return;
+        }
+        hideError();
+        $("notice").classList.toggle("hidden", !data.meta.dataWarning);
+        if (data.meta.dataWarning) setText("notice", data.meta.dataWarning);
+
+        renderStatus(data);
+        renderAll(data);
+        renderGo(data);
+        renderBanner(data);
+        renderStats(data);
+        renderTokens(data);
+        renderEstimate(data);
+        renderHistory(data);
+        renderHourly(data);
+        renderHits(data);
+        renderEvents(data);
+        renderSessions(data);
+        renderModels(data);
+        renderServer(data);
+        renderFooter(data);
+        tick();
+      }
+
+      function showError(message, detail) {
+        $("errorPanel").classList.remove("hidden");
+        setText("errorTitle", "Could not read usage data");
+        setText("errorText", detail ? `${message} (${detail})` : message);
+        setText("statusText", "Data unavailable");
+        $("statusPill").className = "pill bad";
+      }
+
+      function hideError() {
+        $("errorPanel").classList.add("hidden");
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* Live updates                                                        */
+      /* ------------------------------------------------------------------ */
+
+      function tick() {
+        const data = state.data;
+        if (!data || data.error) return;
+        const resetAt = data.meta.resetAt ? Date.parse(data.meta.resetAt) : NaN;
+        if (Number.isFinite(resetAt)) {
+          const remaining = resetAt - Date.now();
+          const text = remaining > 0 ? fmtDuration(remaining) : "estimate passed";
+          setText("resetCountdown", text);
+          if (!$("banner").classList.contains("hidden")) {
+            const prefix = data.meta.resetSource === "server" ? "Resets in " : "Estimated reset in ";
+            $("bannerTimer").textContent = remaining > 0 ? prefix + text : "Waiting for the next refusal";
+          }
+        } else {
+          setText("resetCountdown", "–");
+        }
+
+        const age = Date.now() - state.lastFetch;
+        const refreshMs = Math.max(2000, data.meta.refreshMs || 5000);
+        const stale = age > refreshMs * 3;
+        const updated = $("updatedPill");
+        updated.style.color = stale ? "var(--warn)" : "";
+        updated.style.borderColor = stale ? "rgba(251, 191, 36, 0.45)" : "";
+        updated.title = stale
+          ? `No successful read for ${fmtDuration(age)}`
+          : "Last successful read: " + fmtDateTime(data.meta.generatedAt);
+
+        tickGo();
+      }
+
+      async function load(force) {
+        const btn = $("refreshBtn");
+        if (force) btn.classList.add("busy");
+        try {
+          const res = await fetch("/api/usage" + (force ? "?refresh=1" : ""), { cache: "no-store" });
+          if (!res.ok && res.status !== 200) throw new Error("HTTP " + res.status);
+          const data = await res.json();
+          render(data);
+          if (!state.pollTimer) {
+            state.pollTimer = setInterval(() => load(false), Math.max(2000, data.meta.refreshMs || 5000));
+          }
+        } catch (error) {
+          if (!state.data) showError(String(error.message || error));
+        } finally {
+          btn.classList.remove("busy");
+        }
+      }
+
+      function setMetric(metric) {
+        state.metric = metric;
+        for (const button of $("metricToggle").querySelectorAll("button")) {
+          button.classList.toggle("active", button.dataset.metric === metric);
+        }
+        if (state.data && !state.data.error) renderHistory(state.data);
+      }
+
+      $("metricToggle").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-metric]");
+        if (button) setMetric(button.dataset.metric);
+      });
+
+      function setTokenScope(scope) {
+        state.tokenScope = scope;
+        for (const button of $("tokenScopeToggle").querySelectorAll("button")) {
+          button.classList.toggle("active", button.dataset.scope === scope);
+        }
+        if (state.data && !state.data.error) renderTokens(state.data);
+      }
+
+      $("tokenScopeToggle").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-scope]");
+        if (button) setTokenScope(button.dataset.scope);
+      });
+
+      function setTokenHistoryDays(days) {
+        state.tokenHistoryDays = days;
+        for (const button of $("tokenHistoryToggle").querySelectorAll("button")) {
+          button.classList.toggle("active", Number(button.dataset.days) === days);
+        }
+        if (state.data && !state.data.error) renderTokens(state.data);
+      }
+
+      $("tokenHistoryToggle").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-days]");
+        if (button) setTokenHistoryDays(Number(button.dataset.days));
+      });
+
+      $("hitToggle").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-hits]");
+        if (!button) return;
+        state.hitLimit = button.dataset.hits === "all" ? "all" : Number(button.dataset.hits);
+        for (const option of $("hitToggle").querySelectorAll("button")) {
+          option.classList.toggle("active", option === button);
+        }
+        if (state.data && !state.data.error) renderHits(state.data);
+      });
+
+      $("refreshBtn").addEventListener("click", () => load(true));
+      $("consoleSyncBtn").addEventListener("click", (event) => syncConsole(event.currentTarget));
+
+      let resizeTimer = null;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (state.data && !state.data.error) {
+            renderHistory(state.data);
+            renderHourly(state.data);
+          }
+        }, 120);
+      });
+
+      setInterval(tick, 1000);
+      load(false);
+    </script>
+  </body>
+</html>

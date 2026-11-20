@@ -1,0 +1,21 @@
+{
+  "port": 4319,
+  "host": "127.0.0.1",
+  "refreshMs": 5000,
+  "historyDays": 120,
+  "chartDays": 30,
+  "minHitPointsForEstimate": 3,
+  "fallback": {
+    "requests": 350,
+    "tokens": 35000000,
+    "listValue": 1.2
+  },
+  "console": {
+    "baseUrl": "https://opencode.ai",
+    "orgId": "",
+    "cookie": "",
+    "syncIntervalMs": 300000,
+    "maxPages": 30,
+    "trackGo": true
+  }
+}
