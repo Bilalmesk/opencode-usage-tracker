@@ -14,17 +14,10 @@
   };
   const KIND_COLORS = {
     free: "#8b5cf6",
-    go: "#22d3ee",
-    zen: "#fbbf24",
-    external: "#34d399",
+    go: "#f59e0b",
+    zen: "#ec4899",
+    external: "#3b82f6",
   };
-  const KIND_LABELS = {
-    free: "Free",
-    go: "Go",
-    zen: "Zen",
-    external: "API",
-  };
-
   const state = {
     view: "overview",
     range: 14,
@@ -64,6 +57,12 @@
   const axisColor = () => (isLight() ? "#6b7280" : "#6b7488");
   const gridColor = () => (isLight() ? "rgba(17,24,39,0.08)" : "rgba(255,255,255,0.06)");
 
+  const escapeText = (value) =>
+    String(value == null ? "" : value).replace(
+      /[&<>"']/g,
+      (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char],
+    );
+
   function node(tag, className, text) {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -71,10 +70,9 @@
     return el;
   }
 
-  function providerColor(kind, index = 0) {
-    const base = KIND_COLORS[kind] || "#8b5cf6";
-    if (index % 2 === 0) return base;
-    return kind === "external" ? "#2dd4bf" : base;
+  function providerColor(provider) {
+    if (window.ocProviderColor) return window.ocProviderColor(provider);
+    return KIND_COLORS[provider && provider.kind] || "#8b5cf6";
   }
 
   /* ---------------- Theme ---------------- */
@@ -319,7 +317,7 @@
       seen.add(key);
       const chip = node("span", "v2-chip");
       const dot = node("span", "dot");
-      dot.style.background = KIND_COLORS[provider.kind] || "#8b5cf6";
+      dot.style.background = providerColor(provider);
       chip.append(dot, provider.kind === "external" ? provider.providerName : provider.plan);
       wrap.append(chip);
     }
@@ -409,7 +407,7 @@
     }
   }
 
-  function stackedChart(days) {
+  function stackedChart(days, providers) {
     const width = 760;
     const height = 240;
     const padL = 38;
@@ -422,10 +420,23 @@
     const max = Math.max(...totals, 1);
     const gap = days.length > 20 ? 3 : 6;
     const bw = Math.max(3, (innerW - gap * Math.max(0, days.length - 1)) / Math.max(1, days.length));
-    const kinds = ["free", "go", "zen", "external"];
-    const yOf = (value) => padT + innerH - (value / max) * innerH;
 
-    let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Requests by plan per UTC day">`;
+    const order = [];
+    const seen = new Set();
+    for (const provider of providers || []) {
+      if (seen.has(provider.key)) continue;
+      seen.add(provider.key);
+      order.push(provider);
+    }
+    for (const day of days) {
+      for (const provider of day.providers || []) {
+        if (seen.has(provider.key)) continue;
+        seen.add(provider.key);
+        order.push(provider);
+      }
+    }
+
+    let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Requests by provider per UTC day">`;
     for (let i = 0; i <= 4; i += 1) {
       const y = padT + (innerH * i) / 4;
       const value = (max * (4 - i)) / 4;
@@ -438,20 +449,18 @@
     days.forEach((day, index) => {
       const x = padL + index * (bw + gap);
       let yCursor = padT + innerH;
-      const byKind = {};
-      for (const provider of day.providers || []) {
-        byKind[provider.kind] = (byKind[provider.kind] || 0) + provider.requests;
-      }
-      for (const kind of kinds) {
-        const value = byKind[kind] || 0;
+      const byProvider = new Map((day.providers || []).map((provider) => [provider.key, provider]));
+      for (const provider of order) {
+        const entry = byProvider.get(provider.key);
+        const value = entry ? entry.requests : 0;
         if (value <= 0) continue;
         const h = (value / max) * innerH;
         yCursor -= h;
         svg += `<rect x="${x.toFixed(1)}" y="${yCursor.toFixed(1)}" width="${bw.toFixed(
           1,
-        )}" height="${h.toFixed(1)}" rx="2" fill="${KIND_COLORS[kind]}"><title>${day.day} · ${
-          KIND_LABELS[kind]
-        }: ${fmtInt(value)}</title></rect>`;
+        )}" height="${h.toFixed(1)}" rx="2" fill="${providerColor(provider)}"><title>${
+          day.day
+        } · ${escapeText(provider.providerName)}: ${fmtInt(value)}</title></rect>`;
       }
       const date = new Date(`${day.day}T00:00:00Z`);
       if (index % Math.max(1, Math.ceil(days.length / 7)) === 0 || index === days.length - 1) {
@@ -470,17 +479,22 @@
     if (!wrap) return;
     const all = data.all || {};
     const days = (all.days || []).slice(-state.range);
-    wrap.innerHTML = stackedChart(days);
+    const providers = all.providers || [];
+    wrap.innerHTML = stackedChart(days, providers);
     const legend = $("ovStackLegend");
     if (legend) {
       legend.textContent = "";
-      const kinds = [...new Set(days.flatMap((day) => (day.providers || []).map((p) => p.kind)))];
-      const ordered = ["free", "go", "zen", "external"].filter((kind) => kinds.includes(kind));
-      for (const kind of ordered) {
+      const active = new Set(
+        days.flatMap((day) =>
+          (day.providers || []).filter((provider) => provider.requests > 0).map((provider) => provider.key),
+        ),
+      );
+      const ordered = providers.filter((provider) => active.has(provider.key));
+      for (const provider of ordered) {
         const item = node("span");
         const dot = node("i");
-        dot.style.background = KIND_COLORS[kind];
-        item.append(dot, KIND_LABELS[kind]);
+        dot.style.background = providerColor(provider);
+        item.append(dot, provider.providerName);
         legend.append(item);
       }
     }
@@ -507,14 +521,14 @@
       const start = Math.min(100, at);
       at = Math.min(100, at + provider.sharePct);
       if (at <= start) return;
-      parts.push(`${providerColor(provider.kind, index)} ${start.toFixed(2)}% ${at.toFixed(2)}%`);
+      parts.push(`${providerColor(provider)} ${start.toFixed(2)}% ${at.toFixed(2)}%`);
     });
     donut.style.background = `conic-gradient(${parts.join(", ")})`;
     legend.textContent = "";
     providers.forEach((provider, index) => {
       const item = node("span");
       const dot = node("i");
-      dot.style.background = providerColor(provider.kind, index);
+      dot.style.background = providerColor(provider);
       item.append(dot, `${provider.providerName} · ${fmtPct(provider.sharePct)}`);
       legend.append(item);
     });
@@ -588,12 +602,12 @@
       const row = node("div", "v2-provider-row");
       const name = node("div", "name");
       const dot = node("span", "dot");
-      dot.style.background = providerColor(provider.kind, index);
+      dot.style.background = providerColor(provider);
       name.append(dot, node("span", null, provider.providerName));
       const bar = node("div", "bar");
       const fill = node("i");
       fill.style.width = `${Math.max(2, ((provider.sharePct || 0) / max) * 100)}%`;
-      fill.style.background = providerColor(provider.kind, index);
+      fill.style.background = providerColor(provider);
       bar.append(fill);
       row.append(
         name,

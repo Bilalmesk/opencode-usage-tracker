@@ -72,6 +72,7 @@ one.
 | `server.mjs` | SQLite reader, classification, free/Go/all aggregation, Console sync, HTTP API |
 | `public/index.html` | V2 shell, view markup, CSS, and client render functions |
 | `public/v2.js` | Sidebar views, command palette, theme, overview charts |
+| `public/palette.js` | Stable per-provider colors shared by charts and widget |
 | `public/compact.html` | Compact widget |
 | `test-support/fixture.mjs` | Synthetic OpenCode database |
 | `test/smoke.test.mjs` | End-to-end API/UI smoke test |

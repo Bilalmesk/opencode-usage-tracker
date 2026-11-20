@@ -1980,6 +1980,14 @@
         background: #e6ebf3;
       }
 
+      body.v2 #goSection .go-eyebrow {
+        color: #fbbf24;
+      }
+
+      body.v2 #goSection .go-meter .go-meter-bar > i {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      }
+
       body.v2 .go-table th {
         position: sticky;
         top: 0;
@@ -3390,6 +3398,7 @@
       <div class="v2-command-list" id="v2CommandList"></div>
     </dialog>
 
+    <script src="/palette.js"></script>
     <script src="/v2.js"></script>
 
     <script>
@@ -4034,14 +4043,15 @@
           stats.append(item);
         }
 
-        const colors = { free: "#8b5cf6", go: "#22d3ee", zen: "#fbbf24", external: "#34d399" };
+        const providerColor = (provider) =>
+          window.ocProviderColor ? window.ocProviderColor(provider) : "#8b5cf6";
         const traffic = $("allTraffic");
         traffic.textContent = "";
         const bar = make("div", "traffic");
         const legend = make("div", "traffic-legend");
         for (const provider of all.providers || []) {
           const share = Math.max(0, Math.min(100, provider.sharePct || 0));
-          const color = colors[provider.kind] || "#8b5cf6";
+          const color = providerColor(provider);
           if (share > 0) {
             const segment = make("i");
             segment.style.width = `${share}%`;
@@ -4064,7 +4074,7 @@
           const name = make("td", "strong");
           const nameLine = make("div");
           const providerDot = make("span", "provider-dot");
-          providerDot.style.background = colors[provider.kind] || "#8b5cf6";
+          providerDot.style.background = providerColor(provider);
           nameLine.append(providerDot, provider.providerName);
           name.append(nameLine);
           const plan = make("div", "event-meta", provider.plan);

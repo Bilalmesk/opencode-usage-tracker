@@ -77,6 +77,9 @@ The dashboard is now a small app shell rather than one long page:
   remembers the choice in `localStorage`.
 - **Mobile:** the sidebar becomes an off-canvas drawer with an icon-only
   toolbar.
+- **Provider colors:** Free is violet, Go amber, Zen pink, and every external
+  provider gets a distinct blue/emerald/cyan/lime/teal/slate color from
+  `public/palette.js`, shared by the charts, tables, and widget.
 - **Charts:** redraw with theme-aware grid/axis colors and keep
   `prefers-reduced-motion` intact.
 
@@ -746,6 +749,7 @@ opencode-usage-tracker/
 ├── server.mjs              # read-only SQLite reader + HTTP server + Console sync
 ├── public/index.html       # V2 dashboard shell + views
 ├── public/v2.js            # sidebar, command palette, theme, overview charts
+├── public/palette.js       # stable per-provider colors
 ├── public/compact.html     # widget
 ├── test/                   # smoke + syntax tests
 ├── test-support/           # synthetic SQLite fixture

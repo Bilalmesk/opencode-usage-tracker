@@ -134,14 +134,20 @@ test("server exposes free, Go, and external-provider data", async (t) => {
   assert.match(dashboard.text, /id="overviewSection"/);
   assert.match(dashboard.text, /id="allSection"/);
   assert.match(dashboard.text, /id="goSection"/);
+  assert.match(dashboard.text, /src="\/palette.js"/);
   assert.match(dashboard.text, /src="\/v2.js"/);
   assert.doesNotMatch(dashboard.text, /undefined is not a function/);
+
+  const palette = await get(server.port, "/palette.js");
+  assert.equal(palette.res.status, 200);
+  assert.match(palette.text, /ocProviderColor/);
 
   const shell = await get(server.port, "/v2.js");
   assert.equal(shell.res.status, 200);
   assert.match(shell.text, /window\.v2Render/);
 
   const widget = await get(server.port, "/compact");
+  assert.match(widget.text, /src="\/palette.js"/);
   assert.equal(widget.res.status, 200);
   assert.match(widget.text, /renderGoWidget/);
 

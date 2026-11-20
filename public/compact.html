@@ -453,6 +453,8 @@
       </div>
     </div>
 
+    <script src="/palette.js"></script>
+
     <script>
       "use strict";
 
@@ -489,12 +491,8 @@
 
       let data = null;
 
-      const KIND_COLORS = {
-        free: "#8b5cf6",
-        go: "#22d3ee",
-        zen: "#fbbf24",
-        external: "#34d399",
-      };
+      const providerColor = (provider) =>
+        window.ocProviderColor ? window.ocProviderColor(provider) : "#8b5cf6";
 
       function renderPlanAndTraffic(next) {
         const all = next.all || {};
@@ -515,7 +513,7 @@
           if (share <= 0) continue;
           const segment = document.createElement("i");
           segment.style.width = `${share}%`;
-          segment.style.background = KIND_COLORS[provider.kind] || "#8b5cf6";
+          segment.style.background = providerColor(provider);
           traffic.append(segment);
         }
         traffic.classList.toggle("hidden", traffic.childElementCount === 0);

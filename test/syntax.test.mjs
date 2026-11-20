@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-for (const file of ["server.mjs", "public/v2.js"]) {
+for (const file of ["server.mjs", "public/v2.js", "public/palette.js"]) {
   test(`${file} passes node --check`, () => {
     assert.doesNotThrow(() => {
       execFileSync(process.execPath, ["--check", path.join(root, file)], {
