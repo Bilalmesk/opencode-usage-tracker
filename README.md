@@ -62,6 +62,33 @@ or double-click `start.cmd`.
 Add `--open` to open the browser, `--open-compact` to open the widget.
 Set `PORT` to use a different port.
 
+### V2 interface
+
+The dashboard is now a small app shell rather than one long page:
+
+- **Sidebar views:** Overview, Free tier, Go plan, Providers, History, Console.
+  Deep links use `#/overview`, `#/free`, `#/go`, `#/providers`, `#/history`,
+  `#/console`.
+- **Overview:** hero totals, per-plan KPI cards, stacked activity chart,
+  traffic donut, alerts, and top providers.
+- **Command palette:** `Ctrl+K` / `Cmd+K` jumps views, refreshes, syncs
+  Console, toggles theme, or downloads any CSV.
+- **Theme:** dark by default; the sidebar toggle switches to light and
+  remembers the choice in `localStorage`.
+- **Mobile:** the sidebar becomes an off-canvas drawer with an icon-only
+  toolbar.
+- **Charts:** redraw with theme-aware grid/axis colors and keep
+  `prefers-reduced-motion` intact.
+
+The previous layout is preserved as git tag **`v1.3.0-backup`** and branch
+**`backup/v1-design`**:
+
+```bash
+git checkout v1.3.0-backup
+# or
+git checkout backup/v1-design
+```
+
 ## How the free quota actually works (verified 2026-11-13 → 2026-11-18)
 
 The free tier is a **24-hour bucket counted per network, not per session**. The
@@ -704,9 +731,10 @@ npm run check   # syntax checks only
 
 The suite creates a temporary synthetic SQLite database (`test-support/fixture.mjs`)
 with free, Go, and external-provider rows plus a free 429, starts the server on
-an ephemeral port, and verifies the API, all three CSVs, the dashboard, the
-widget, and that no credential fields leak. It never reads your real database,
-config, or `.console-sync.json`.
+an ephemeral port, and verifies the API, all three CSVs, the V2 shell/dashboard,
+the widget, and that no credential fields leak. It never reads your real
+database, config, or `.console-sync.json`. `public/v2.js` and the inline page
+scripts are syntax-checked independently.
 
 CI (`.github/workflows/ci.yml`) runs the same tests on every push to `main` and
 every pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -716,7 +744,8 @@ every pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 ```
 opencode-usage-tracker/
 ├── server.mjs              # read-only SQLite reader + HTTP server + Console sync
-├── public/index.html       # dashboard
+├── public/index.html       # V2 dashboard shell + views
+├── public/v2.js            # sidebar, command palette, theme, overview charts
 ├── public/compact.html     # widget
 ├── test/                   # smoke + syntax tests
 ├── test-support/           # synthetic SQLite fixture

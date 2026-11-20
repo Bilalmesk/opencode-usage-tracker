@@ -130,9 +130,16 @@ test("server exposes free, Go, and external-provider data", async (t) => {
 
   const dashboard = await get(server.port, "/");
   assert.equal(dashboard.res.status, 200);
+  assert.match(dashboard.text, /id="v2Sidebar"/);
+  assert.match(dashboard.text, /id="overviewSection"/);
   assert.match(dashboard.text, /id="allSection"/);
   assert.match(dashboard.text, /id="goSection"/);
+  assert.match(dashboard.text, /src="\/v2.js"/);
   assert.doesNotMatch(dashboard.text, /undefined is not a function/);
+
+  const shell = await get(server.port, "/v2.js");
+  assert.equal(shell.res.status, 200);
+  assert.match(shell.text, /window\.v2Render/);
 
   const widget = await get(server.port, "/compact");
   assert.equal(widget.res.status, 200);

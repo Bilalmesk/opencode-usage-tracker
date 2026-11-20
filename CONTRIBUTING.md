@@ -70,7 +70,8 @@ one.
 | Path | Purpose |
 | ---- | ------- |
 | `server.mjs` | SQLite reader, classification, free/Go/all aggregation, Console sync, HTTP API |
-| `public/index.html` | Dashboard markup, CSS, and client render functions |
+| `public/index.html` | V2 shell, view markup, CSS, and client render functions |
+| `public/v2.js` | Sidebar views, command palette, theme, overview charts |
 | `public/compact.html` | Compact widget |
 | `test-support/fixture.mjs` | Synthetic OpenCode database |
 | `test/smoke.test.mjs` | End-to-end API/UI smoke test |
@@ -98,6 +99,14 @@ clearly labelled source.
 ## Changing the UI
 
 - Both pages are self-contained: inline CSS and a single inline script.
+- The dashboard is a view shell. A section belongs to a view with
+  `data-view="overview|free|go|providers|history|console"`. `public/v2.js`
+  hides the other views and keeps the hash, sidebar, and breadcrumb in sync.
+- The overview (`#overviewSection`) is rendered by `renderOverview()` in
+  `public/v2.js`; the detail views reuse the long-standing IDs and renderers
+  in the inline script.
+- Keep keyboard access working: `Ctrl/Cmd+K` opens the palette, `Escape`
+  closes the mobile drawer, and every new button needs a focus-visible state.
 - Keep the render functions dependency-free and defensive: API fields may be
   absent when a feature is disabled or a sync has not run yet.
 - Test at narrow widths; the provider tables scroll horizontally and the

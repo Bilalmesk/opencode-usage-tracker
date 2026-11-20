@@ -2756,7 +2756,11 @@ function serveStatic(req, res, urlPath) {
     const body = fs.readFileSync(filePath);
     res.writeHead(200, {
       "Content-Type": MIME[ext] || "application/octet-stream",
-      "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=300",
+      // App code must update immediately after a pull; only assets like icons
+      // are worth caching.
+      "Cache-Control": [".html", ".js", ".css"].includes(ext)
+        ? "no-cache"
+        : "public, max-age=300",
       "Content-Length": body.length,
     });
     res.end(body);

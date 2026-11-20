@@ -7,13 +7,15 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("server.mjs passes node --check", () => {
-  assert.doesNotThrow(() => {
-    execFileSync(process.execPath, ["--check", path.join(root, "server.mjs")], {
-      stdio: "pipe",
+for (const file of ["server.mjs", "public/v2.js"]) {
+  test(`${file} passes node --check`, () => {
+    assert.doesNotThrow(() => {
+      execFileSync(process.execPath, ["--check", path.join(root, file)], {
+        stdio: "pipe",
+      });
     });
   });
-});
+}
 
 for (const page of ["public/index.html", "public/compact.html"]) {
   test(`${page} inline JavaScript parses`, () => {

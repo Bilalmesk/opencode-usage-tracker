@@ -275,6 +275,131 @@
       .hidden {
         display: none !important;
       }
+
+      /* ---------------- V2 widget skin ---------------- */
+
+      body.solid {
+        background:
+          radial-gradient(720px 360px at 14% -6%, rgba(139, 92, 246, 0.28), transparent 62%),
+          radial-gradient(600px 320px at 100% 100%, rgba(34, 211, 238, 0.12), transparent 64%),
+          #07090e;
+      }
+
+      .widget {
+        position: relative;
+        max-width: 382px;
+        padding: 18px;
+        border-radius: 22px;
+        border: 1px solid rgba(139, 92, 246, 0.28);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.008)),
+          rgba(15, 18, 27, 0.9);
+        box-shadow:
+          0 35px 90px -40px rgba(0, 0, 0, 0.95),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .widget::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.9), rgba(34, 211, 238, 0.8), transparent);
+      }
+
+      .widget::after {
+        content: "";
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        right: -90px;
+        top: -120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 68%);
+        pointer-events: none;
+      }
+
+      .top {
+        margin-bottom: 15px;
+      }
+
+      .brand {
+        gap: 10px;
+      }
+
+      .brand a {
+        font-size: 13.5px;
+        font-weight: 660;
+      }
+
+      .plan-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        background: rgba(139, 92, 246, 0.12);
+        color: #d8ccff;
+        font-size: 9.5px;
+        font-weight: 650;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 3px 7px;
+      }
+
+      .big {
+        font-size: 43px;
+      }
+
+      .caption {
+        margin-bottom: 9px;
+      }
+
+      .mini-traffic {
+        display: flex;
+        height: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #1b2130;
+        margin: 0 0 10px;
+      }
+
+      .mini-traffic i {
+        display: block;
+        height: 100%;
+        min-width: 2px;
+        transition: width 0.4s ease;
+      }
+
+      .meter {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .fill {
+        background: linear-gradient(90deg, #6d3ef0, #8b5cf6 45%, #22d3ee);
+      }
+
+      .hint {
+        margin-top: 2px;
+      }
+
+      .split {
+        margin-top: 2px;
+      }
+
+      .cell .val {
+        font-size: 15px;
+      }
+
+      .tokline {
+        border-top-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .status {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
     </style>
   </head>
   <body class="solid">
@@ -292,7 +417,8 @@
               />
             </svg>
           </div>
-          <a href="/" target="_blank" rel="noreferrer" title="Open the full dashboard">OpenCode Free</a>
+          <a href="/" target="_blank" rel="noreferrer" title="Open the full dashboard">OpenCode Usage</a>
+          <span class="plan-chip" id="planChip">–</span>
         </div>
         <span class="status" id="status"><span class="dot"></span><span id="statusText">…</span></span>
       </div>
@@ -305,6 +431,7 @@
           <span class="of" id="rate">–</span>
         </div>
         <div class="caption" id="caption">free requests in the current 24h window</div>
+        <div class="mini-traffic" id="miniTraffic" aria-hidden="true"></div>
         <div class="meter"><div class="fill" id="fill"></div></div>
         <div class="hint">
           <span id="hintLeft">–</span>
@@ -361,6 +488,38 @@
       }
 
       let data = null;
+
+      const KIND_COLORS = {
+        free: "#8b5cf6",
+        go: "#22d3ee",
+        zen: "#fbbf24",
+        external: "#34d399",
+      };
+
+      function renderPlanAndTraffic(next) {
+        const all = next.all || {};
+        const go = next.go || {};
+        const chip = $("planChip");
+        if (chip) {
+          chip.textContent = go.detected
+            ? "Go"
+            : all.providerCount > 1
+              ? `${all.providerCount} providers`
+              : "Free";
+        }
+        const traffic = $("miniTraffic");
+        if (!traffic) return;
+        traffic.textContent = "";
+        for (const provider of (all.providers || []).slice(0, 6)) {
+          const share = Math.max(0, Math.min(100, provider.sharePct || 0));
+          if (share <= 0) continue;
+          const segment = document.createElement("i");
+          segment.style.width = `${share}%`;
+          segment.style.background = KIND_COLORS[provider.kind] || "#8b5cf6";
+          traffic.append(segment);
+        }
+        traffic.classList.toggle("hidden", traffic.childElementCount === 0);
+      }
 
       /**
        * Go plan mode. The widget's primary number becomes the month meter
@@ -506,6 +665,7 @@
         $("error").classList.add("hidden");
         $("content").classList.remove("hidden");
 
+        renderPlanAndTraffic(next);
         if (renderGoWidget(next)) return;
         if (renderAllWidget(next)) return;
 
