@@ -1099,7 +1099,7 @@ function goSummary(local) {
     stale: Boolean(
       status &&
         status.detected &&
-        (!configured || (age != null && age > CONSOLE.intervalMs * 3)),
+        (!configured || !CONSOLE.trackGo || (age != null && age > CONSOLE.intervalMs * 3)),
     ),
     error: consoleData.goError || null,
     plan: status && status.plan ? status.plan : null,
