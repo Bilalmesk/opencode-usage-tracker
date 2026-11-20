@@ -2395,12 +2395,15 @@
 
         const pill = $("goPill");
         pill.className = "pill";
-        if (go.error) {
-          pill.classList.add("warn");
-          setText("goPillText", "Meters stale");
-        } else if (meters.month) {
+        if (meters.month && !go.stale) {
           pill.classList.add("good");
           setText("goPillText", "Meters live");
+        } else if (meters.month) {
+          pill.classList.add("warn");
+          setText("goPillText", "Saved meters");
+        } else if (go.error) {
+          pill.classList.add("warn");
+          setText("goPillText", "Meters stale");
         } else {
           pill.classList.add("warn");
           setText("goPillText", "Local only");
@@ -2555,7 +2558,11 @@
             }`,
           );
         }
-        bits.push(go.fetchedAt ? `Meters synced ${fmtDateTime(go.fetchedAt)}` : "Meters not synced yet");
+        bits.push(
+          go.fetchedAt
+            ? `${go.stale ? "Saved meters" : "Meters"} synced ${fmtDateTime(go.fetchedAt)}`
+            : "Meters not synced yet",
+        );
         if (local.detected) {
           bits.push(`${fmtInt(local.today.requests)} Go requests today in the local database`);
           const goTokens = (entry) =>

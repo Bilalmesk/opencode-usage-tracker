@@ -1087,11 +1087,20 @@ function consoleSummary() {
 function goSummary(local) {
   const status = consoleData.goStatus;
   const activity = consoleData.goActivity;
+  const configured = Boolean(CONSOLE.cookie);
+  const age = consoleData.goAt ? Date.now() - consoleData.goAt : null;
   return {
     detected: Boolean((status && status.detected) || (local && local.detected)),
-    configured: Boolean(CONSOLE.cookie),
+    configured,
     enabled: CONSOLE.trackGo,
     fetchedAt: consoleData.goAt ? new Date(consoleData.goAt).toISOString() : null,
+    // Saved meters remain useful, but flag them when the cookie was removed
+    // or the last sync is much older than the interval.
+    stale: Boolean(
+      status &&
+        status.detected &&
+        (!configured || (age != null && age > CONSOLE.intervalMs * 3)),
+    ),
     error: consoleData.goError || null,
     plan: status && status.plan ? status.plan : null,
     meters: status && status.meters ? status.meters : null,

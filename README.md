@@ -214,7 +214,8 @@ appears from local detection and shows local requests/tokens with a clear
 
 `/api/usage` exposes the whole block as `go`:
 
-- `go.detected`, `go.configured`, `go.enabled`, `go.fetchedAt`, `go.error`
+- `go.detected`, `go.configured`, `go.enabled`, `go.fetchedAt`, `go.stale`,
+  `go.error`
 - `go.plan` — product, renewal product, access start/end, cancel/renewal flags
 - `go.meters.fiveHour|week|month` — `{ startsAt, resetsAt, limitMicroCents,
   usedMicroCents, limitUsd, usedUsd, remainingUsd, percent }`
