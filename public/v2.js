@@ -137,6 +137,7 @@
     }
     const crumb = $("v2Crumb");
     if (crumb) crumb.textContent = VIEW_LABELS[view] || "Overview";
+    document.title = `${VIEW_LABELS[view] || "Overview"} · OpenCode Usage`;
     document.body.classList.remove("v2-nav-open");
     const menu = $("v2MenuBtn");
     if (menu) menu.setAttribute("aria-expanded", "false");
@@ -254,8 +255,12 @@
   function openCommand() {
     const dialog = $("v2Command");
     if (!dialog) return;
-    state.commandIndex = 0;
     const input = $("v2CommandInput");
+    if (dialog.open) {
+      if (input) input.focus();
+      return;
+    }
+    state.commandIndex = 0;
     if (input) input.value = "";
     renderCommandList();
     if (typeof dialog.showModal === "function") dialog.showModal();
@@ -309,13 +314,13 @@
     wrap.textContent = "";
     const seen = new Set();
     for (const provider of all.providers || []) {
-      const key = `${provider.kind}:${provider.plan}`;
+      const key = `${provider.kind}:${provider.provider}`;
       if (seen.has(key)) continue;
       seen.add(key);
       const chip = node("span", "v2-chip");
       const dot = node("span", "dot");
       dot.style.background = KIND_COLORS[provider.kind] || "#8b5cf6";
-      chip.append(dot, provider.plan);
+      chip.append(dot, provider.kind === "external" ? provider.providerName : provider.plan);
       wrap.append(chip);
     }
     if (!wrap.childElementCount) {
@@ -399,8 +404,6 @@
           `${fmtPct(month.percent)} used · resets in ${fmtDuration(
             Date.parse(month.resetsAt) - Date.now(),
           )}`,
-          tokens,
-          ["#22d3ee", "#8b5cf6"],
         ),
       );
     }
@@ -492,18 +495,19 @@
     const providers = (all.providers || []).filter((provider) => provider.sharePct > 0);
     if (total) total.textContent = fmtCompact(all.last30Days ? all.last30Days.requests : 0);
     if (!providers.length) {
-      donut.style.background = "conic-gradient(rgba(255,255,255,0.07) 0 100%)";
+      donut.style.background = `conic-gradient(${
+        isLight() ? "rgba(17,24,39,0.08)" : "rgba(255,255,255,0.07)"
+      } 0 100%)`;
       legend.textContent = "";
       return;
     }
     let at = 0;
     const parts = [];
     providers.forEach((provider, index) => {
-      const start = at;
-      at += provider.sharePct;
-      parts.push(
-        `${providerColor(provider.kind, index)} ${start.toFixed(2)}% ${Math.min(100, at).toFixed(2)}%`,
-      );
+      const start = Math.min(100, at);
+      at = Math.min(100, at + provider.sharePct);
+      if (at <= start) return;
+      parts.push(`${providerColor(provider.kind, index)} ${start.toFixed(2)}% ${at.toFixed(2)}%`);
     });
     donut.style.background = `conic-gradient(${parts.join(", ")})`;
     legend.textContent = "";
@@ -540,9 +544,14 @@
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-          })}`
+            timeZone: "UTC",
+          })} UTC`
         : "Reset unknown";
-      add("bad", "Free tier is refused", `${reset}. Other plans are unaffected.`);
+      if (meta.status === "limit-banner") {
+        add("warn", "Free tier recovered", `Free requests succeeded after the refusal. ${reset}.`);
+      } else {
+        add("bad", "Free tier is refused", `${reset}. Other plans are unaffected.`);
+      }
     }
     if (go.detected && go.meters && go.meters.month) {
       const pct = go.meters.month.percent || 0;
@@ -601,12 +610,19 @@
 
   function renderOverview(data) {
     const all = data.all || {};
-    const meta = data.meta || {};
+    const server = data.server || {};
     const sub = $("ovSub");
     if (sub) {
-      sub.textContent = `${all.providerCount || 0} providers · ${(all.plans || []).join(" + ") || "waiting for data"} · ${
-        meta.serverSeen ? "Console connected" : "local only"
-      }`;
+      const consoleState = !server.configured
+        ? "local only"
+        : server.error
+          ? "Console error"
+          : server.lastSyncAt
+            ? "Console connected"
+            : "Console awaiting sync";
+      sub.textContent = `${all.providerCount || 0} providers · ${
+        (all.plans || []).join(" + ") || "waiting for data"
+      } · ${consoleState}`;
     }
     planChips(all);
     const todayReq = $("ovTodayReq");

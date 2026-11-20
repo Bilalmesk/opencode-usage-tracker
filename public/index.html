@@ -2487,6 +2487,27 @@
 
       /* ---------------- Responsive ---------------- */
 
+      @media (max-width: 1320px) {
+        body.v2 .topbar-right .btn {
+          font-size: 0;
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          justify-content: center;
+          gap: 0;
+        }
+
+        body.v2 .topbar-right .btn svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        body.v2 .topbar-right .btn kbd,
+        body.v2 .topbar-right .btn span {
+          display: none;
+        }
+      }
+
       @media (max-width: 1180px) {
         :root {
           --v2-sidebar: 226px;
@@ -2497,6 +2518,24 @@
         }
 
         body.v2 .topbar-right .btn span {
+          display: none;
+        }
+
+        body.v2 .topbar-right .btn {
+          font-size: 0;
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          justify-content: center;
+          gap: 0;
+        }
+
+        body.v2 .topbar-right .btn svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        body.v2 .topbar-right .btn kbd {
           display: none;
         }
       }
@@ -2740,7 +2779,13 @@
           </div>
 
           <div class="topbar-right">
-            <button class="btn v2-cmd-btn" id="v2CmdBtn" type="button" title="Open command palette">
+            <button
+              class="btn v2-cmd-btn"
+              id="v2CmdBtn"
+              type="button"
+              title="Open command palette"
+              aria-label="Open command palette"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.2-3.2" />
@@ -3335,7 +3380,13 @@
     </div>
 
     <dialog class="v2-command" id="v2Command" aria-label="Command palette">
-      <input id="v2CommandInput" autocomplete="off" spellcheck="false" placeholder="Jump to a view or run an action…" />
+      <input
+        id="v2CommandInput"
+        aria-label="Search views and actions"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Jump to a view or run an action…"
+      />
       <div class="v2-command-list" id="v2CommandList"></div>
     </dialog>
 
