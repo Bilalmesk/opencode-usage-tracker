@@ -530,6 +530,11 @@ Cookie: <the signed-in Console session cookie>
 
 - newest-first, cursor pagination (`cursor` must be sent together with the
   same `until`), server-capped at 100 rows per page, **30-day retention**
+- `until` is deliberately 30 seconds behind “now”: the cursor is time-based,
+  and rows arriving while a page walk is in progress invalidate it (Console
+  answers HTTP 400 after 100–200 records). The next sync starts at
+  `maxStarted − 60s`, so the gap is covered. A rejected cursor is retried once
+  from `since`.
 - requires `x-org-id` (auto-discovered via `GET /console/api/orgs`) **and**
   the signed-in session cookie
 - free requests are the free-model rows with `cost: 0`; rejected rows omit

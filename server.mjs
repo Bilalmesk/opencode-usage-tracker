@@ -340,6 +340,11 @@ const CONSOLE = {
 };
 const CONSOLE_STATE_PATH =
   process.env.OPENCODE_CONSOLE_STATE || path.join(__dirname, ".console-sync.json");
+// The request-log cursor is time-based. If `until` is "right now", rows that
+// arrive while page 2 is being read invalidate the cursor and Console answers
+// HTTP 400. Snapshot a slightly older instant; the next sync starts back at
+// maxStarted - 60s and catches the gap.
+const CONSOLE_SYNC_LAG_MS = 30_000;
 // Bump when the persisted shape changes; older files are backfilled once.
 const CONSOLE_STATE_SCHEMA = 6;
 
@@ -680,6 +685,7 @@ async function syncUsageExport(orgId) {
     res = await fetch(url, {
       headers: { accept: "text/csv", "x-org-id": orgId, cookie: CONSOLE.cookie },
       redirect: "manual",
+      signal: AbortSignal.timeout(30_000),
     });
   } catch (netError) {
     return { ok: false, error: `Console export unreachable: ${netError.cause?.code || netError.message}` };
@@ -830,7 +836,7 @@ async function syncGo(orgId) {
 
   let statusRes;
   try {
-    statusRes = await fetch(statusUrl, { headers, redirect: "manual" });
+    statusRes = await fetch(statusUrl, { headers, redirect: "manual", signal: AbortSignal.timeout(30_000) });
   } catch (netError) {
     consoleData.goError = `Go status unreachable: ${netError.cause?.code || netError.message}`;
     return { ok: false, error: consoleData.goError };
@@ -864,6 +870,7 @@ async function syncGo(orgId) {
     const activityRes = await fetch(new URL("/console/api/activity/go", CONSOLE.baseUrl), {
       headers,
       redirect: "manual",
+      signal: AbortSignal.timeout(30_000),
     });
     if (activityRes.ok) {
       activity = normalizeGoActivity(await activityRes.json().catch(() => null));
@@ -892,6 +899,7 @@ async function resolveConsoleOrgId() {
   const res = await fetch(new URL("/console/api/orgs", CONSOLE.baseUrl), {
     headers: { accept: "application/json", cookie: CONSOLE.cookie },
     redirect: "manual",
+    signal: AbortSignal.timeout(30_000),
   });
   if (res.status === 401 || res.status === 403) {
     throw new Error("Console session expired. Paste a fresh Cookie header into tracker.config.json (console.cookie).");
@@ -933,12 +941,13 @@ async function runConsoleSync({ force = false } = {}) {
     }
 
     const since = Number.isFinite(state.since) ? state.since : Date.now() - 30 * DAY_MS;
-    const until = Date.now();
+    const until = Date.now() - CONSOLE_SYNC_LAG_MS;
     const items = [];
     let cursor = null;
     let pages = 0;
     let error = null;
     let done = false;
+    let restarted = false;
 
     while (pages < CONSOLE.maxPages) {
       const url = new URL("/console/api/request-logs", CONSOLE.baseUrl);
@@ -953,6 +962,7 @@ async function runConsoleSync({ force = false } = {}) {
         res = await fetch(url, {
           headers: { accept: "application/json", "x-org-id": orgId, cookie: CONSOLE.cookie },
           redirect: "manual",
+          signal: AbortSignal.timeout(30_000),
         });
       } catch (netError) {
         error = `Console unreachable: ${netError.cause?.code || netError.message}`;
@@ -963,11 +973,21 @@ async function runConsoleSync({ force = false } = {}) {
         error = "Console session expired. Paste a fresh Cookie header into tracker.config.json (console.cookie).";
         break;
       }
-      if (res.status === 409) {
-        // Cursor no longer valid — restart the page walk from `since`.
-        cursor = null;
-        pages += 1;
-        continue;
+      if (res.status === 409 || res.status === 400) {
+        // A stale/expired cursor and an occasional Console 400 both recover
+        // by restarting the walk once from `since`. Repeating page 1 is safe:
+        // aggregateConsoleItems dedupes request ids.
+        if (cursor && !restarted) {
+          restarted = true;
+          cursor = null;
+          pages += 1;
+          continue;
+        }
+        const detail = res.status === 400
+          ? (await res.text().catch(() => "")).trim().slice(0, 300)
+          : "";
+        error = `Console API returned HTTP ${res.status}${detail ? `: ${detail}` : ""}.`;
+        break;
       }
       if (res.status === 429 || res.status === 503) {
         error = "Console API rate-limited this sync. Retrying on the next interval.";
