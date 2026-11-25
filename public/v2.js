@@ -583,6 +583,16 @@
     if (server.configured && !server.lastSyncAt) {
       add("warn", "Console never synced", "Press Sync Console to fetch the server-side view.");
     }
+    const spike = data.insights && data.insights.spike;
+    if (spike && spike.active) {
+      add(
+        "warn",
+        "Usage spike detected",
+        `${fmtInt(spike.today.requests)} requests today vs ${fmtInt(
+          spike.previous7dAverage.requests,
+        )} average${spike.requestRatio ? ` · ${spike.requestRatio.toFixed(1)}×` : ""}.`,
+      );
+    }
     if (!wrap.childElementCount) {
       add("", "All clear", "No refusals, no stale syncs, and no plan is near a limit.");
     }

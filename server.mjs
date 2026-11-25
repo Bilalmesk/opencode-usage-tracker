@@ -2415,6 +2415,7 @@ function buildData() {
 
   const currentServerWindow = serverRowsIn(windowFrom, now);
   let boundaryEvidence = null;
+  const boundaryRows = [];
   for (const hit of hitPoints) {
     if (!hit.resetAt) continue;
     const at = Date.parse(hit.at);
@@ -2423,15 +2424,18 @@ function buildData() {
     const from = reset - DAY_MS;
     if (at < from) continue;
     const server = serverRowsIn(from, at);
+    const boundary = {
+      serverSuccesses: server.requests,
+      tokens: server.tokens,
+      models: server.models,
+      at: hit.at,
+      resetAt: hit.resetAt,
+      windowStart: new Date(from).toISOString(),
+      localRequests: hit.requests,
+    };
+    boundaryRows.push(boundary);
     if (!boundaryEvidence || server.requests > boundaryEvidence.serverSuccesses) {
-      boundaryEvidence = {
-        serverSuccesses: server.requests,
-        tokens: server.tokens,
-        models: server.models,
-        at: hit.at,
-        windowStart: new Date(from).toISOString(),
-        localRequests: hit.requests,
-      };
+      boundaryEvidence = boundary;
     }
   }
 
@@ -2477,8 +2481,78 @@ function buildData() {
       beyondInferred: currentServerWindow.requests > inferredDaily,
     },
     headroomUpperBound: Math.max(0, inferredDaily - currentServerWindow.requests),
+    boundaries: boundaryRows
+      .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+      .slice(-20)
+      .map((boundary) => ({
+        ...boundary,
+        strong:
+          boundary.serverSuccesses + 1 >= configuredInferred * 0.75,
+      })),
+    forecast: (() => {
+      const recent1h = serverRowsIn(now - 3_600_000, now);
+      const recent6h = serverRowsIn(now - 6 * 3_600_000, now);
+      const remaining = Math.max(0, inferredDaily - currentServerWindow.requests);
+      const perHour = recent1h.requests;
+      const etaMs = perHour > 0 ? (remaining / perHour) * 3_600_000 : null;
+      const resetMs = resetAt != null ? resetAt : null;
+      return {
+        recent1h: { requests: recent1h.requests, tokens: recent1h.tokens },
+        recent6h: { requests: recent6h.requests, tokens: recent6h.tokens },
+        requestsPerHour: perHour,
+        remaining,
+        etaMs: etaMs == null ? null : Math.min(etaMs, 7 * DAY_MS),
+        resetAt: resetMs != null ? new Date(resetMs).toISOString() : null,
+        likelyBeforeReset:
+          etaMs == null || resetMs == null ? null : now + etaMs < resetMs,
+      };
+    })(),
     note:
       "Upper bound only: account-attributed Console rows are exact, but other clients on the same public network are invisible.",
+  };
+
+  // Live rates and a simple spike detector for the Overview alert card.
+  const recentAll = (ms) => sumAllRows(allRows.filter((row) => row.t >= now - ms));
+  const todayKey = dayKey(now);
+  const todayDay =
+    allUsage.days.find((day) => day.day === todayKey) || {
+      requests: 0,
+      tokens: emptyTokens(),
+      costUsd: 0,
+    };
+  const previousDays = allUsage.days.filter((day) => day.day !== todayKey).slice(-7);
+  const previousAvg = {
+    requests: previousDays.length
+      ? previousDays.reduce((sum, day) => sum + day.requests, 0) / previousDays.length
+      : 0,
+    tokens: previousDays.length
+      ? previousDays.reduce((sum, day) => sum + day.tokens.total, 0) / previousDays.length
+      : 0,
+    costUsd: previousDays.length
+      ? previousDays.reduce((sum, day) => sum + day.costUsd, 0) / previousDays.length
+      : 0,
+  };
+  const requestRatio = previousAvg.requests > 0 ? todayDay.requests / previousAvg.requests : null;
+  const costRatio = previousAvg.costUsd > 0 ? todayDay.costUsd / previousAvg.costUsd : null;
+  const insights = {
+    rates: {
+      last1h: recentAll(3_600_000),
+      last6h: recentAll(6 * 3_600_000),
+      last24h: recentAll(24 * 3_600_000),
+    },
+    spike: {
+      today: {
+        requests: todayDay.requests,
+        tokens: todayDay.tokens.total,
+        costUsd: todayDay.costUsd,
+      },
+      previous7dAverage: previousAvg,
+      requestRatio: requestRatio == null ? null : round(requestRatio, 2),
+      costRatio: costRatio == null ? null : round(costRatio, 2),
+      active:
+        todayDay.requests >= 20 &&
+        ((requestRatio != null && requestRatio >= 2) || (costRatio != null && costRatio >= 2.5)),
+    },
   };
 
   const todayHours = hourly;
@@ -2637,6 +2711,7 @@ function buildData() {
     window,
     totals,
     freeQuota,
+    insights,
     go,
     all: allUsage,
     server: consoleSummary(),

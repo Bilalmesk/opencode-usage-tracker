@@ -193,8 +193,18 @@ when no refusal is pending.
   `go.local.*` because Go costs money and is not part of the free bucket.
 - **A server-observed free window card** that counts account-wide free
   successes in the current 24h window from Console request logs and compares
-  them with the **inferred 512 boundary** (not published). See
-  *Server-observed free window* below.
+  them with the **inferred 512 boundary** (not published). It also projects a
+  **runway**: at the last hour’s free-request rate, will the boundary arrive
+  before the reset? See *Server-observed free window* below.
+- **Quota Lab** — a scatter plot of every refusal boundary with the
+  server-observed success count, local count, tokens, and reset, with the
+  inferred 512 and fresh-network 1024 lines. It turns the quota guess into
+  visible evidence.
+- **Efficiency index** — 30-day cost, cost per 1M tokens, cache-read share, and
+  tokens per request for the top models/providers, so expensive or
+  cache-poor models stand out.
+- **Usage-spike detector** — compares today with the previous 7-day average and
+  raises an Overview alert when requests or cost are more than 2× baseline.
 - **A “What is exact — and what isn’t” card** that states the private/dynamic
   cap, the request-counted (not token-counted) rule, the reset range, and what
   “headroom” really means. The full JSON payload is downloadable from the
@@ -240,6 +250,15 @@ API fields:
   source, syncedAt, lagging, beyondInferred }`
 - `freeQuota.headroomUpperBound` — `inferred − serverWindow.requests`, an
   **upper bound** because same-network clients may consume unseen capacity
+- `freeQuota.forecast` — `{ recent1h, recent6h, requestsPerHour, remaining,
+  etaMs, resetAt, likelyBeforeReset }`; a runway estimate, not a promise
+- `freeQuota.boundaries[]` — every retained refusal boundary with
+  `serverSuccesses`, `localRequests`, `tokens`, `models`, `at`, `resetAt`,
+  `windowStart`, and `strong`
+- `insights.rates` — last 1h / 6h / 24h requests, tokens, and cost across all
+  providers
+- `insights.spike` — today vs the previous 7 UTC-day average, with
+  `requestRatio`, `costRatio`, and `active`
 - `freeQuota.note`
 
 Do not turn this into a claim of remaining quota. The card says “inferred” and

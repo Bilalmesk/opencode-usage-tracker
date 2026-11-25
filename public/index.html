@@ -2555,6 +2555,58 @@
         line-height: 1.5;
       }
 
+      .quota-lab-chart {
+        width: 100%;
+        min-height: 210px;
+        margin: 2px 0 12px;
+      }
+
+      .quota-lab-chart svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .quota-lab-list {
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid var(--v2-line);
+      }
+
+      .quota-lab-row {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.4fr) repeat(4, minmax(70px, 0.7fr)) minmax(120px, 1fr);
+        gap: 12px;
+        align-items: baseline;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--v2-line);
+        font-size: 11.8px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .quota-lab-row .head {
+        color: var(--faint);
+        font-size: 9.5px;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .quota-lab-row .strong {
+        color: var(--text);
+        font-weight: 580;
+      }
+
+      .quota-lab-row .num {
+        color: var(--muted);
+        text-align: right;
+      }
+
+      .quota-lab-row .reset {
+        color: var(--faint);
+        text-align: right;
+      }
+
       @media (max-width: 760px) {
         .quota-models {
           grid-template-columns: 1fr;
@@ -2562,6 +2614,16 @@
 
         .quota-side {
           width: 100%;
+        }
+
+        .quota-lab-row {
+          grid-template-columns: minmax(110px, 1.4fr) repeat(3, minmax(60px, 0.7fr));
+          gap: 8px;
+        }
+
+        .quota-lab-row .reset,
+        .quota-lab-row .tokens {
+          display: none;
         }
       }
 
@@ -3123,6 +3185,36 @@
         <div class="go-foot" id="allFoot"></div>
       </section>
 
+      <section class="grid" data-view="providers" aria-label="Provider efficiency">
+        <article class="card span-12">
+          <div class="card-head">
+            <div>
+              <h2>Efficiency index</h2>
+              <p id="efficiencySub">Cost, cache share, and request efficiency across the top models in the last 30 days.</p>
+            </div>
+            <span class="pill" id="efficiencyPill">30d</span>
+          </div>
+          <div class="table-wrap">
+            <table class="go-table" id="efficiencyTable">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Provider</th>
+                  <th class="num">Requests</th>
+                  <th class="num">Tokens</th>
+                  <th class="num">Cost</th>
+                  <th class="num">Cost / 1M</th>
+                  <th class="num" title="Cache-read share of total tokens">Cache %</th>
+                  <th class="num">Tokens / req</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty hidden" id="efficiencyEmpty">No model data yet.</div>
+        </article>
+      </section>
+
       <section id="goSection" class="go hidden" data-view="go" aria-label="OpenCode Go plan usage">
         <div class="go-head">
           <div>
@@ -3220,6 +3312,7 @@
             <div class="quota-side">
               <div class="quota-side-row"><span>Inferred boundary</span><strong id="quotaLimit">–</strong></div>
               <div class="quota-side-row"><span>Upper-bound headroom</span><strong id="quotaHeadroom">–</strong></div>
+              <div class="quota-side-row"><span>Projected hit</span><strong id="quotaEta">–</strong></div>
               <div class="quota-side-row"><span>Fresh-network possibility</span><strong id="quotaNewNetwork">–</strong></div>
             </div>
           </div>
@@ -3232,6 +3325,21 @@
           <div class="quota-models" id="quotaModels"></div>
           <div class="empty hidden" id="quotaEmpty">No account-attributed free requests in this window. Sync Console or use a free model.</div>
           <div class="quota-note" id="quotaNote"></div>
+        </article>
+      </section>
+
+      <section class="grid" data-view="free" aria-label="Quota lab">
+        <article class="card span-12">
+          <div class="card-head">
+            <div>
+              <h2>Quota Lab</h2>
+              <p>Server-observed successes at each refusal boundary. Violet points are strong boundaries; amber are lower bounds. The 512 line is inferred; 1,024 is the possible fresh-network allowance.</p>
+            </div>
+            <span class="pill" id="quotaLabPill">Evidence</span>
+          </div>
+          <div class="quota-lab-chart" id="quotaLabChart"></div>
+          <div class="quota-lab-list" id="quotaLabList"></div>
+          <div class="empty hidden" id="quotaLabEmpty">No refusal boundaries with server-log rows yet.</div>
         </article>
       </section>
 
@@ -4487,6 +4595,22 @@
             ? "past inferred boundary"
             : `≤ ${fmtInt(q.headroomUpperBound != null ? q.headroomUpperBound : Math.max(0, limit - requests))}`,
         );
+        const forecast = q.forecast || {};
+        const eta = $("quotaEta");
+        eta.style.color = "";
+        eta.title =
+          "At the last hour's server-observed free-request rate. Not a promise; other network clients and changing usage move it.";
+        if (forecast.remaining === 0) {
+          eta.textContent = "at boundary";
+          eta.style.color = "var(--bad)";
+        } else if (forecast.etaMs == null) {
+          eta.textContent = "no recent free rate";
+        } else {
+          eta.textContent = `~${fmtDuration(forecast.etaMs)}${
+            forecast.likelyBeforeReset ? " · before reset" : " · after reset"
+          }`;
+          eta.style.color = forecast.likelyBeforeReset ? "var(--warn)" : "var(--good)";
+        }
 
         const bar = $("quotaBar");
         bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
@@ -4552,6 +4676,190 @@
           `${q.note || ""} ${
             sw.lagging ? "Console sync is behind; press Sync Console for a fresher count." : ""
           }`.trim(),
+        );
+      }
+
+      function renderQuotaLab(data) {
+        const q = data.freeQuota || {};
+        const inferred = q.inferred || {};
+        const boundaries = (q.boundaries || [])
+          .filter((b) => Number(b.serverSuccesses) > 0)
+          .slice(-20);
+        const chart = $("quotaLabChart");
+        const list = $("quotaLabList");
+        const empty = $("quotaLabEmpty");
+        chart.textContent = "";
+        list.textContent = "";
+        empty.classList.toggle("hidden", boundaries.length > 0);
+        setText(
+          "quotaLabPill",
+          boundaries.length ? `${boundaries.length} boundaries` : "Waiting for data",
+        );
+        if (!boundaries.length) return;
+
+        const limited = boundaries;
+        const width = 900;
+        const height = 250;
+        const padL = 44;
+        const padR = 18;
+        const padT = 16;
+        const padB = 30;
+        const innerW = width - padL - padR;
+        const innerH = height - padT - padB;
+        const inferredLine = Number(inferred.dailyRequests) || 512;
+        const freshLine = Number(inferred.newNetworkRequests) || inferredLine * 2;
+        const maxY = Math.max(freshLine, ...limited.map((b) => Number(b.serverSuccesses) || 0)) * 1.08;
+        const light = document.documentElement.dataset.theme === "light";
+        const grid = light ? "rgba(17,24,39,0.08)" : "rgba(255,255,255,0.055)";
+        const axis = light ? "#6b7280" : "#6b7488";
+        const yOf = (v) => padT + innerH - (v / maxY) * innerH;
+        const xOf = (index) =>
+          padL + (limited.length === 1 ? innerW / 2 : (innerW * index) / (limited.length - 1));
+
+        let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Server-observed free successes at refusal boundaries">`;
+        for (let i = 0; i <= 4; i += 1) {
+          const y = padT + (innerH * i) / 4;
+          const value = (maxY * (4 - i)) / 4;
+          svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(
+            1,
+          )}" stroke="${grid}" />`;
+          svg += `<text x="${padL - 7}" y="${(y + 3).toFixed(1)}" fill="${axis}" font-size="9.5" text-anchor="end">${fmtCompact(
+            value,
+          )}</text>`;
+        }
+
+        for (const [value, label, color] of [
+          [inferredLine, `inferred ${fmtInt(inferredLine)}`, "#8b5cf6"],
+          [freshLine, `fresh network ~${fmtInt(freshLine)}`, "#22d3ee"],
+        ]) {
+          const y = yOf(value);
+          svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(
+            1,
+          )}" stroke="${color}" stroke-opacity="0.55" stroke-dasharray="5 4" />`;
+          svg += `<text x="${width - padR}" y="${(y - 5).toFixed(
+            1,
+          )}" fill="${color}" font-size="9.5" text-anchor="end">${label}</text>`;
+        }
+
+        limited.forEach((boundary, index) => {
+          const x = xOf(index);
+          const y = yOf(Number(boundary.serverSuccesses) || 0);
+          const count = Number(boundary.serverSuccesses) || 0;
+          const color = boundary.strong ? "#8b5cf6" : "#f59e0b";
+          svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${
+            boundary.strong ? 5 : 4
+          }" fill="${color}" stroke="${light ? "#fff" : "#0b0d12"}" stroke-width="1.4"><title>${escapeXml(
+            `${fmtDateTime(boundary.at)} · ${fmtInt(count)} server-observed · ${fmtInt(
+              boundary.localRequests,
+            )} local · ${fmtCompact(boundary.tokens)} tokens`,
+          )}</title></circle>`;
+          const date = new Date(boundary.at);
+          if (
+            index % Math.max(1, Math.ceil(limited.length / 7)) === 0 ||
+            index === limited.length - 1
+          ) {
+            svg += `<text x="${x.toFixed(1)}" y="${height - 7}" fill="${axis}" font-size="9" text-anchor="middle">${date.toLocaleDateString(
+              [],
+              { month: "short", day: "numeric", timeZone: "UTC" },
+            )}</text>`;
+          }
+        });
+        svg += "</svg>";
+        chart.innerHTML = svg;
+
+        const header = document.createElement("div");
+        header.className = "quota-lab-row";
+        for (const [label, cls] of [
+          ["Boundary", "head"],
+          ["Server", "head num"],
+          ["Local", "head num"],
+          ["Tokens", "head num tokens"],
+          ["Signal", "head num"],
+          ["Reset", "head reset"],
+        ]) {
+          const cell = document.createElement("span");
+          cell.className = cls;
+          cell.textContent = label;
+          header.append(cell);
+        }
+        list.append(header);
+        for (const boundary of limited.slice().reverse().slice(0, 8)) {
+          const row = document.createElement("div");
+          row.className = "quota-lab-row";
+          const values = [
+            [fmtDateTime(boundary.at), "strong"],
+            [fmtInt(boundary.serverSuccesses), "num strong"],
+            [fmtInt(boundary.localRequests), "num"],
+            [fmtCompact(boundary.tokens), "num tokens"],
+            [boundary.strong ? "strong" : "low", "num"],
+            [boundary.resetAt ? fmtDateTime(boundary.resetAt) : "–", "reset"],
+          ];
+          for (const [value, cls] of values) {
+            const cell = document.createElement("span");
+            cell.className = cls;
+            cell.textContent = value;
+            row.append(cell);
+          }
+          list.append(row);
+        }
+      }
+
+      function renderEfficiency(data) {
+        const all = data.all || {};
+        const tbody = $("efficiencyTable").querySelector("tbody");
+        tbody.textContent = "";
+        const models = (all.models || [])
+          .filter((model) => model.last30Days && model.last30Days.requests > 0)
+          .sort((a, b) => {
+            const cost = (b.last30Days.costUsd || 0) - (a.last30Days.costUsd || 0);
+            if (cost !== 0) return cost;
+            return b.last30Days.tokens.total - a.last30Days.tokens.total;
+          })
+          .slice(0, 12);
+        $("efficiencyEmpty").classList.toggle("hidden", models.length > 0);
+        $("efficiencyTable").classList.toggle("hidden", models.length === 0);
+        if (!models.length) return;
+
+        for (const model of models) {
+          const tokens = model.last30Days.tokens;
+          const cost = model.last30Days.costUsd || 0;
+          const perM = tokens.total > 0 ? (cost / tokens.total) * 1_000_000 : 0;
+          const tr = document.createElement("tr");
+          const name = document.createElement("td");
+          name.className = "strong";
+          name.textContent = prettyModel(model.model);
+          const provider = document.createElement("td");
+          provider.textContent = `${model.providerName} · ${model.plan}`;
+          const cells = [
+            [fmtInt(model.last30Days.requests), "num"],
+            [fmtCompact(tokens.total), "num"],
+            [model.kind === "free" || model.kind === "go" ? "included" : fmtUsd(cost), "num"],
+            [model.kind === "free" || model.kind === "go" ? "included" : fmtUsd(perM), "num"],
+            [`${fmtPct(tokens.cacheRead, tokens.total)}%`, "num"],
+            [fmtCompact(model.last30Days.requests ? tokens.total / model.last30Days.requests : 0), "num"],
+          ];
+          const tds = cells.map(([value, cls]) => {
+            const td = document.createElement("td");
+            td.className = cls;
+            td.textContent = value;
+            return td;
+          });
+          tr.append(name, provider, ...tds);
+          tbody.append(tr);
+        }
+
+        const cacheShare = models.reduce((sum, model) => sum + (model.last30Days.tokens.cacheRead || 0), 0);
+        const totalTokens = models.reduce((sum, model) => sum + (model.last30Days.tokens.total || 0), 0);
+        const paidCost = models.reduce(
+          (sum, model) => sum + (model.kind === "free" || model.kind === "go" ? 0 : model.last30Days.costUsd || 0),
+          0,
+        );
+        setText(
+          "efficiencySub",
+          `Top ${models.length} models by 30-day cost · cache-read share ${fmtPct(
+            cacheShare,
+            totalTokens,
+          )}% · paid-provider cost ${fmtUsd(paidCost)}. Free/Go rows are marked included.`,
         );
       }
 
@@ -5399,6 +5707,8 @@
         renderBanner(data);
         renderStats(data);
         renderFreeQuota(data);
+        renderQuotaLab(data);
+        renderEfficiency(data);
         renderTokens(data);
         renderEstimate(data);
         renderHistory(data);

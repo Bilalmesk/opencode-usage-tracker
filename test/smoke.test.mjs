@@ -110,6 +110,12 @@ test("server exposes free, Go, and external-provider data", async (t) => {
   assert.equal(usage.freeQuota.headroomUpperBound, 509);
   assert.equal(usage.freeQuota.inferred.evidence.serverSuccesses, 3);
   assert.equal(usage.freeQuota.inferred.evidence.strong, false);
+  assert.equal(usage.freeQuota.boundaries.length, 1);
+  assert.equal(usage.freeQuota.boundaries[0].serverSuccesses, 3);
+  assert.equal(usage.freeQuota.forecast.recent6h.requests, 3);
+  assert.equal(usage.freeQuota.forecast.remaining, 509);
+  assert.equal(usage.insights.rates.last6h.requests, 3);
+  assert.equal(usage.insights.spike.active, false);
 
   const anthropic = usage.all.providers.find((p) => p.provider === "anthropic");
   assert.ok(anthropic, "external provider is detected");
