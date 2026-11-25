@@ -2420,6 +2420,151 @@
         white-space: nowrap;
       }
 
+      /* ---------------- Server-observed free window ---------------- */
+
+      .quota-card {
+        border-color: rgba(139, 92, 246, 0.24);
+        background:
+          radial-gradient(700px 220px at 0% 0%, rgba(139, 92, 246, 0.12), transparent 60%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 60%),
+          var(--v2-panel);
+      }
+
+      html[data-theme="light"] .quota-card {
+        border-color: rgba(109, 62, 240, 0.2);
+        background:
+          radial-gradient(700px 220px at 0% 0%, rgba(124, 92, 255, 0.1), transparent 60%),
+          #ffffff;
+      }
+
+      .quota-hero {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 22px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+
+      .quota-number {
+        font-size: clamp(34px, 4vw, 48px);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.055em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .quota-number small {
+        color: var(--faint);
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .quota-caption {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .quota-side {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 235px;
+      }
+
+      .quota-side-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 18px;
+        color: var(--faint);
+        font-size: 11.5px;
+      }
+
+      .quota-side-row strong {
+        color: var(--text);
+        font-weight: 620;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      .quota-bar {
+        height: 9px;
+        margin: 15px 0 11px;
+      }
+
+      .quota-evidence {
+        border-left: 2px solid rgba(139, 92, 246, 0.45);
+        padding: 1px 0 1px 10px;
+        color: var(--faint);
+        font-size: 11.5px;
+        line-height: 1.5;
+        margin-bottom: 13px;
+      }
+
+      .quota-evidence strong {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .quota-models {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 22px;
+        border-top: 1px solid var(--v2-line);
+        padding-top: 7px;
+      }
+
+      .quota-model {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 12px;
+        align-items: baseline;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--v2-line);
+        font-size: 12px;
+      }
+
+      .quota-model .name {
+        color: var(--text);
+        font-weight: 560;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .quota-model .req {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .quota-model .tok {
+        color: var(--faint);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+        min-width: 62px;
+        text-align: right;
+      }
+
+      .quota-note {
+        color: var(--faint);
+        font-size: 11px;
+        margin-top: 9px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 760px) {
+        .quota-models {
+          grid-template-columns: 1fr;
+        }
+
+        .quota-side {
+          width: 100%;
+        }
+      }
+
       /* ---------------- Command palette ---------------- */
 
       dialog.v2-command {
@@ -3054,6 +3199,39 @@
           <div class="stat-value" id="ceilingToday">–</div>
           <div class="stat-sub" id="ceilingSub">vs the last refused window</div>
           <div class="stat-foot" id="ceilingFoot"></div>
+        </article>
+      </section>
+
+      <section class="grid" data-view="free" aria-label="Server-observed free window">
+        <article class="card span-12 quota-card">
+          <div class="card-head">
+            <div>
+              <h2>Server-observed free window</h2>
+              <p id="quotaSub">Account-wide free successes seen in Console request logs.</p>
+            </div>
+            <span class="pill" id="quotaPill">Inferred</span>
+          </div>
+
+          <div class="quota-hero">
+            <div>
+              <div class="quota-number" id="quotaBig">–</div>
+              <div class="quota-caption">account-wide free successes in this window</div>
+            </div>
+            <div class="quota-side">
+              <div class="quota-side-row"><span>Inferred boundary</span><strong id="quotaLimit">–</strong></div>
+              <div class="quota-side-row"><span>Upper-bound headroom</span><strong id="quotaHeadroom">–</strong></div>
+              <div class="quota-side-row"><span>Fresh-network possibility</span><strong id="quotaNewNetwork">–</strong></div>
+            </div>
+          </div>
+
+          <div class="meter quota-bar" role="progressbar" aria-label="Server-observed free usage vs inferred boundary" id="quotaMeter" aria-valuemin="0" aria-valuemax="100">
+            <div class="meter-fill" id="quotaBar"></div>
+          </div>
+
+          <div class="quota-evidence" id="quotaEvidence"></div>
+          <div class="quota-models" id="quotaModels"></div>
+          <div class="empty hidden" id="quotaEmpty">No account-attributed free requests in this window. Sync Console or use a free model.</div>
+          <div class="quota-note" id="quotaNote"></div>
         </article>
       </section>
 
@@ -4274,6 +4452,109 @@
         );
       }
 
+      function renderFreeQuota(data) {
+        const q = data.freeQuota || {};
+        const inferred = q.inferred || {};
+        const sw = q.serverWindow || {};
+        const limit = Number(inferred.dailyRequests) || 512;
+        const requests = Number(sw.requests) || 0;
+        const pct = limit > 0 ? (requests / limit) * 100 : 0;
+
+        setText("quotaBig", fmtInt(requests));
+        $("quotaBig").title = `${fmtInt(requests)} account-wide free successes in the selected 24h window`;
+        setText(
+          "quotaSub",
+          sw.from
+            ? `Account-wide Console rows · ${fmtDateTime(sw.from)} → ${fmtDateTime(sw.to)} · ${
+                sw.lagging ? "sync may lag" : `synced ${fmtClock(sw.syncedAt)}`
+              }`
+            : "Account-wide Console rows are unavailable.",
+        );
+
+        const pill = $("quotaPill");
+        pill.className = "pill warn";
+        setText(
+          "quotaPill",
+          inferred.evidence && inferred.evidence.strong
+            ? `Inferred ${fmtInt(limit)} · not published`
+            : "Inferred · low confidence",
+        );
+        setText("quotaLimit", `~${fmtInt(limit)}`);
+        setText("quotaNewNetwork", `up to ~${fmtInt(inferred.newNetworkRequests || limit * 2)}`);
+        setText(
+          "quotaHeadroom",
+          sw.beyondInferred
+            ? "past inferred boundary"
+            : `≤ ${fmtInt(q.headroomUpperBound != null ? q.headroomUpperBound : Math.max(0, limit - requests))}`,
+        );
+
+        const bar = $("quotaBar");
+        bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        bar.className = "meter-fill" + (pct >= 100 ? " bad" : pct >= 90 ? " warn" : "");
+        $("quotaMeter").setAttribute("aria-valuenow", String(Math.round(Math.min(100, pct))));
+        $("quotaMeter").setAttribute(
+          "aria-valuetext",
+          `${fmtInt(requests)} server-observed free successes of an inferred ${fmtInt(limit)}`,
+        );
+
+        const evidence = $("quotaEvidence");
+        evidence.textContent = "";
+        const ev = inferred.evidence;
+        if (ev && ev.strong) {
+          evidence.append(
+            "Server log: ",
+            (() => {
+              const strong = document.createElement("strong");
+              strong.textContent = `at least ${fmtInt(ev.serverSuccesses)} successes + 1 refusal = ${fmtInt(
+                ev.totalEvents,
+              )}+ events`;
+              return strong;
+            })(),
+            ` at ${fmtDateTime(ev.at)}. `,
+          );
+        } else if (ev) {
+          evidence.append(
+            `Highest retained server-logged boundary: ${fmtInt(ev.serverSuccesses)} successes. `,
+          );
+        } else {
+          evidence.append("No high-count server-logged boundary retained. ");
+        }
+        evidence.append(
+          "This is an inference, not the published cap. The bucket is network-scoped; a fresh network may get up to ~2× the inferred number.",
+        );
+
+        const models = $("quotaModels");
+        models.textContent = "";
+        const rows = (sw.models || []).slice(0, 10);
+        const empty = $("quotaEmpty");
+        empty.classList.toggle("hidden", rows.length > 0);
+        models.classList.toggle("hidden", rows.length === 0);
+        for (const model of rows) {
+          const row = document.createElement("div");
+          row.className = "quota-model";
+          const name = document.createElement("span");
+          name.className = "name";
+          name.textContent =
+            model.model === "unknown" ? "Unattributed model (older sync)" : prettyModel(model.model);
+          name.title = model.model || "unknown";
+          const req = document.createElement("span");
+          req.className = "req";
+          req.textContent = `${fmtInt(model.requests)} req`;
+          const tok = document.createElement("span");
+          tok.className = "tok";
+          tok.textContent = `${fmtCompact(model.tokens)} tok`;
+          row.append(name, req, tok);
+          models.append(row);
+        }
+
+        setText(
+          "quotaNote",
+          `${q.note || ""} ${
+            sw.lagging ? "Console sync is behind; press Sync Console for a fresher count." : ""
+          }`.trim(),
+        );
+      }
+
       function renderTokens(data) {
         const totals = data.totals || {};
         const win = data.window || {};
@@ -5117,6 +5398,7 @@
         renderGo(data);
         renderBanner(data);
         renderStats(data);
+        renderFreeQuota(data);
         renderTokens(data);
         renderEstimate(data);
         renderHistory(data);

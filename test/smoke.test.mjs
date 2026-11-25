@@ -100,6 +100,17 @@ test("server exposes free, Go, and external-provider data", async (t) => {
   assert.equal(usage.totals.tracked.requests, 1, "free bucket stays free-only");
   assert.equal(usage.go.local.tracked.requests, 1, "Go rows stay out of free");
 
+  assert.equal(usage.freeQuota.published, false);
+  assert.equal(usage.freeQuota.inferred.dailyRequests, 512);
+  assert.equal(usage.freeQuota.inferred.newNetworkRequests, 1024);
+  assert.equal(usage.freeQuota.serverWindow.requests, 3);
+  assert.equal(usage.freeQuota.serverWindow.models.length, 2);
+  assert.equal(usage.freeQuota.serverWindow.models[0].model, "deepseek-v4.1-flash-free");
+  assert.equal(usage.freeQuota.serverWindow.models[0].requests, 2);
+  assert.equal(usage.freeQuota.headroomUpperBound, 509);
+  assert.equal(usage.freeQuota.inferred.evidence.serverSuccesses, 3);
+  assert.equal(usage.freeQuota.inferred.evidence.strong, false);
+
   const anthropic = usage.all.providers.find((p) => p.provider === "anthropic");
   assert.ok(anthropic, "external provider is detected");
   assert.equal(anthropic.plan, "API");

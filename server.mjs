@@ -33,6 +33,14 @@ const DEFAULT_CONFIG = {
   chartDays: 30,
   defaultMetric: "requests",
   minHitPointsForEstimate: 3,
+  // Clearly labelled inference, never presented as the published cap.
+  // 512 is the best fit to the one fully logged boundary: 511 server-side
+  // free successes followed by a 429 on 2026-11-18 (512 events). The old
+  // limiter gave a fresh network a 2x allowance.
+  freeQuota: {
+    inferredDailyRequests: 512,
+    inferredNewNetworkRequests: 1024,
+  },
   freeModels: [
     "big-pickle",
     "iceman-free",
@@ -92,6 +100,7 @@ function loadConfig() {
       ...raw,
       prices: { ...DEFAULT_CONFIG.prices, ...(raw.prices || {}) },
       fallback: { ...DEFAULT_CONFIG.fallback, ...(raw.fallback || {}) },
+      freeQuota: { ...DEFAULT_CONFIG.freeQuota, ...(raw.freeQuota || {}) },
       console: { ...DEFAULT_CONFIG.console, ...(raw.console || {}) },
       freeModels: Array.isArray(raw.freeModels) ? raw.freeModels : DEFAULT_CONFIG.freeModels,
     };
@@ -394,7 +403,12 @@ function hydrateConsoleState(raw) {
       const t = Number(row && row.t);
       const tokens = Number(row && row.tokens);
       if (Number.isFinite(t) && Number.isFinite(tokens)) {
-        consoleData.rows.push({ t, tokens, listValue: Number(row.listValue) || 0 });
+        consoleData.rows.push({
+          t,
+          tokens,
+          listValue: Number(row.listValue) || 0,
+          model: row.model ? String(row.model) : null,
+        });
       }
     }
     consoleData.rows.sort((a, b) => a.t - b.t);
@@ -571,6 +585,7 @@ function aggregateConsoleItems(items) {
         cacheRead,
         cacheWrite,
       }).value,
+      model: String(item.model || item.requestedModel || "unknown"),
     });
     added += 1;
   }
@@ -2350,6 +2365,102 @@ function buildData() {
     tracked: aggregateDayEntries(allDays),
   };
 
+  // Server-observed free window / inferred boundary. This is deliberately
+  // separate from the free-tier quota itself: Console rows are exact for
+  // account-attributed successes, but the real bucket is network-scoped and
+  // the published cap does not exist.
+  const serverRowsIn = (from, to) => {
+    const models = new Map();
+    let tokens = 0;
+    let requests = 0;
+    for (const row of consoleData.rows) {
+      if (row.t < from || row.t > to) continue;
+      requests += 1;
+      tokens += Number(row.tokens) || 0;
+      const model = row.model || "unknown";
+      let entry = models.get(model);
+      if (!entry) {
+        entry = { model, requests: 0, tokens: 0 };
+        models.set(model, entry);
+      }
+      entry.requests += 1;
+      entry.tokens += Number(row.tokens) || 0;
+    }
+    return {
+      requests,
+      tokens,
+      models: [...models.values()].sort((a, b) => b.requests - a.requests),
+    };
+  };
+
+  const currentServerWindow = serverRowsIn(windowFrom, now);
+  let boundaryEvidence = null;
+  for (const hit of hitPoints) {
+    if (!hit.resetAt) continue;
+    const at = Date.parse(hit.at);
+    const reset = Date.parse(hit.resetAt);
+    if (!Number.isFinite(at) || !Number.isFinite(reset)) continue;
+    const from = reset - DAY_MS;
+    if (at < from) continue;
+    const server = serverRowsIn(from, at);
+    if (!boundaryEvidence || server.requests > boundaryEvidence.serverSuccesses) {
+      boundaryEvidence = {
+        serverSuccesses: server.requests,
+        tokens: server.tokens,
+        models: server.models,
+        at: hit.at,
+        windowStart: new Date(from).toISOString(),
+        localRequests: hit.requests,
+      };
+    }
+  }
+
+  const configuredInferred = Math.max(1, Number(config.freeQuota.inferredDailyRequests) || 512);
+  const impliedAtBoundary = boundaryEvidence ? boundaryEvidence.serverSuccesses + 1 : null;
+  const inferredDaily = Math.max(configuredInferred, impliedAtBoundary || 0);
+  const inferredNewNetwork = Math.max(
+    Number(config.freeQuota.inferredNewNetworkRequests) || inferredDaily * 2,
+    inferredDaily * 2,
+  );
+  const evidenceStrong =
+    impliedAtBoundary != null && impliedAtBoundary >= configuredInferred * 0.75;
+  const freeQuota = {
+    published: false,
+    inferred: {
+      dailyRequests: inferredDaily,
+      newNetworkRequests: inferredNewNetwork,
+      confidence: evidenceStrong ? "medium" : "low",
+      basis: evidenceStrong
+        ? `At least ${boundaryEvidence.serverSuccesses} retained server-logged free successes plus one 429 (${impliedAtBoundary}+ events) at ${boundaryEvidence.at}; the inferred 512 boundary comes from a fully logged refusal.`
+        : `No high-count server boundary is retained; ${configuredInferred} is carried from the strongest prior observation.`,
+      evidence: boundaryEvidence
+        ? {
+            ...boundaryEvidence,
+            totalEvents: impliedAtBoundary,
+            strong: evidenceStrong,
+          }
+        : null,
+      note:
+        "Inference only. The free cap is private and network-scoped; 512 fits the one fully logged boundary, and a fresh network may get a 2x allowance. Not an official quota.",
+    },
+    serverWindow: {
+      from: new Date(windowFrom).toISOString(),
+      to: new Date(now).toISOString(),
+      requests: currentServerWindow.requests,
+      tokens: currentServerWindow.tokens,
+      models: currentServerWindow.models,
+      source: "console-request-log",
+      accountOnly: true,
+      syncedAt: consoleData.lastSyncAt ? new Date(consoleData.lastSyncAt).toISOString() : null,
+      lagging:
+        !consoleData.lastSyncAt || now - consoleData.lastSyncAt > CONSOLE.intervalMs * 2,
+      beyondInferred: currentServerWindow.requests > inferredDaily,
+    },
+    headroomUpperBound: Math.max(0, inferredDaily - currentServerWindow.requests),
+    note:
+      "Upper bound only: account-attributed Console rows are exact, but other clients on the same public network are invisible.",
+  };
+
   const todayHours = hourly;
 
   const topSessions = [...sessionStats.values()]
@@ -2505,6 +2616,7 @@ function buildData() {
     },
     window,
     totals,
+    freeQuota,
     go,
     all: allUsage,
     server: consoleSummary(),

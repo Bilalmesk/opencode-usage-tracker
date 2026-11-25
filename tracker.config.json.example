@@ -10,6 +10,10 @@
     "tokens": 35000000,
     "listValue": 1.2
   },
+  "freeQuota": {
+    "inferredDailyRequests": 512,
+    "inferredNewNetworkRequests": 1024
+  },
   "console": {
     "baseUrl": "https://opencode.ai",
     "orgId": "",

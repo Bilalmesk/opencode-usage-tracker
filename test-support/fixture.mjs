@@ -84,6 +84,45 @@ export function createFixture() {
   );
 
   db.close();
+  // A small persisted Console request-log sample. This exercises the
+  // server-observed window and per-model breakdown without a cookie.
+  fs.writeFileSync(
+    statePath,
+    JSON.stringify({
+      schema: 6,
+      since: now - 86_400_000,
+      lastSyncAt: now - 60_000,
+      lastError: null,
+      lastCount: 3,
+      serverSeen: true,
+      days: {},
+      seen: {},
+      rows: [
+        {
+          t: now - 3_600_000,
+          tokens: 1_000,
+          listValue: 0,
+          model: "deepseek-v4.1-flash-free",
+        },
+        {
+          t: now - 7_200_000,
+          tokens: 2_000,
+          listValue: 0,
+          model: "deepseek-v4.1-flash-free",
+        },
+        {
+          t: now - 10_800_000,
+          tokens: 3_000,
+          listValue: 0,
+          model: "big-pickle",
+        },
+      ],
+      events: [],
+      exportDays: {},
+      exportAt: now,
+    }),
+  );
+
   fs.writeFileSync(
     configPath,
     JSON.stringify(

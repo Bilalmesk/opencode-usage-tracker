@@ -191,6 +191,10 @@ when no refusal is pending.
   cache-read / cache-write tokens; the per-day table uses the same local
   token columns as the CSV export. Go token totals are reported separately in
   `go.local.*` because Go costs money and is not part of the free bucket.
+- **A server-observed free window card** that counts account-wide free
+  successes in the current 24h window from Console request logs and compares
+  them with the **inferred 512 boundary** (not published). See
+  *Server-observed free window* below.
 - **A “What is exact — and what isn’t” card** that states the private/dynamic
   cap, the request-counted (not token-counted) rule, the reset range, and what
   “headroom” really means. The full JSON payload is downloadable from the
@@ -205,6 +209,50 @@ when no refusal is pending.
   `server.exportTotals` for the 7-day, 30-day, and full export range. The cards
   say how many completed UTC days actually exist, because the export lags the
   current day and can cover fewer than 7 or 30 days.
+
+### Server-observed free window and the inferred 512 boundary
+
+The **Free tier** view now has a **Server-observed free window** card. It counts
+successful free requests in the current 24h window from the Console request
+log, not the local database. That is the best available predictor because the
+local DB omits requests from other clients and sometimes misses server rows.
+
+The inferred boundary is **512 requests**, clearly labelled **not published**:
+
+- On 2026-11-18 the full Console log for the window
+  `00:02:34Z → 15:13:09Z` contained **511 successful free requests** followed
+  by **one 429** — 512 events. The local tracker counted 501 in the same
+  window, so local counting alone understated the boundary by 10.
+- The old public limiter gave a fresh network a 2× allowance; the UI shows
+  **~1024** as the possible fresh-network boundary. That is a hypothesis, not a
+  guarantee.
+- The boundary may be **per free model**, not one global number. Public reports
+  show one free model blocked while another still works.
+- Other clients on the same public network are invisible even to Console.
+  Console rows are exact only for account-attributed requests.
+
+API fields:
+
+- `freeQuota.published` — always `false`
+- `freeQuota.inferred.dailyRequests` / `newNetworkRequests` / `confidence`
+- `freeQuota.inferred.basis` and `evidence`
+- `freeQuota.serverWindow` — `{ from, to, requests, tokens, models[],
+  source, syncedAt, lagging, beyondInferred }`
+- `freeQuota.headroomUpperBound` — `inferred − serverWindow.requests`, an
+  **upper bound** because same-network clients may consume unseen capacity
+- `freeQuota.note`
+
+Do not turn this into a claim of remaining quota. The card says “inferred” and
+“upper bound” for that reason. Configure the inference with:
+
+```json
+{
+  "freeQuota": {
+    "inferredDailyRequests": 512,
+    "inferredNewNetworkRequests": 1024
+  }
+}
+```
 
 ### OpenCode Go plan (verified 2026-11-20)
 
@@ -439,6 +487,10 @@ Exact:
   until Console builds the day's rollup, and it only contains
   account-attributed traffic. The tracker filters this export to free rows, so
   it remains a free-tier rollup.
+- the **Console request-log count** for the current 24h free window:
+  exact for account-attributed successes, with the same network caveat. This
+  powers `freeQuota.serverWindow`; its per-model counts are exact when the
+  request-log rows include the model.
 - **Go plan meters** (`fiveHour`, `week`, `month`) from
   `GET /console/api/go/status?fresh=true`: exact limits, used amounts, and
   reset instants.
@@ -610,6 +662,10 @@ Edit `tracker.config.json` (optional) or set environment variables:
   "chartDays": 30,
   "minHitPointsForEstimate": 3,
   "fallback": { "requests": 350, "tokens": 35000000, "listValue": 1.2 },
+  "freeQuota": {
+    "inferredDailyRequests": 512,
+    "inferredNewNetworkRequests": 1024
+  },
   "console": {
     "baseUrl": "https://opencode.ai",
     "orgId": "",
